@@ -237,23 +237,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        .typing-text {
-            display: inline-block;
-            overflow: hidden;
-            border-right: 2px solid #000;
-            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
-        }
-        
-        @keyframes typing {
-            from { width: 0 }
-            to { width: 100% }
-        }
-        
-        @keyframes blink-caret {
-            from, to { border-color: transparent }
-            50% { border-color: #000 }
-        }
-        
         .error-box {
             background: #fff3f3;
             border: 2px solid #ffcccc;
@@ -319,9 +302,7 @@
     <div id="wikiPage" style="display: none;">
         <div id="loadingSection" class="loading" style="display: none;">
             <div class="loading-spinner"></div>
-            <div style="font-size: 18px; margin-top: 20px;">
-                <span class="typing-text">Generating comprehensive article...</span>
-            </div>
+            <div style="font-size: 18px; margin-top: 20px;">Generating article...</div>
         </div>
         
         <div id="errorSection" class="error-box" style="display: none;">
@@ -347,9 +328,7 @@
 
     <script>
         const API_URL = "https://freeai.logise1123.workers.dev/";
-        const IMAGE_API = "https://image.pollinations.ai/prompt/";
         let currentTopic = '';
-        let isGenerating = false;
         
         const topics = [
             { title: "Artificial Intelligence", desc: "Machine learning, neural networks, and AI applications" },
@@ -372,65 +351,21 @@
         
         function searchTopic() {
             const topic = document.getElementById('searchInput').value.trim();
-            if (topic && !isGenerating) {
+            if (topic) {
                 window.location.href = `https://bahrlab.github.io/wiki?d=${encodeURIComponent(topic)}`;
             }
         }
         
         function goToTopic(topic) {
-            if (!isGenerating) {
-                window.location.href = `https://bahrlab.github.io/wiki?d=${encodeURIComponent(topic)}`;
-            }
+            window.location.href = `https://bahrlab.github.io/wiki?d=${encodeURIComponent(topic)}`;
         }
         
         function generateImage(prompt) {
-            return `${IMAGE_API}${encodeURIComponent(prompt)}?width=600&height=400&nofetch=true`;
-        }
-        
-        function createSimplePrompt(topic) {
-            return `Create a comprehensive encyclopedia article about "${topic}". 
-
-Respond with ONLY this JSON structure:
-
-{
-"title": "${topic}",
-"category": "Science|History|Technology|Art|Nature|Culture|Physics|Biology|Geography|Mathematics",
-"intro": "A 2-3 sentence engaging introduction about ${topic}.",
-"image_prompt": "photorealistic detailed image of ${topic}",
-"key_facts": [
-{"title": "Definition", "content": "Clear definition"},
-{"title": "Origin/Discovery", "content": "When and how"},
-{"title": "Significance", "content": "Why it matters"},
-{"title": "Applications", "content": "Real-world uses"}
-],
-"sections": [
-{
-"title": "Detailed Overview",
-"content": "Comprehensive explanation covering main aspects"
-},
-{
-"title": "Historical Background",
-"content": "Historical development and timeline"
-},
-{
-"title": "Key Characteristics",
-"content": "Main features and properties"
-},
-{
-"title": "Modern Relevance",
-"content": "Current importance and future prospects"
-}
-]
-}
-
-Make content detailed, accurate, and educational. Use **bold** for key terms.`;
+            return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=600&height=400`;
         }
         
         async function generateWikiPage(topic) {
-            if (isGenerating) return;
-            
             currentTopic = topic;
-            isGenerating = true;
             
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('wikiPage').style.display = 'block';
@@ -438,18 +373,22 @@ Make content detailed, accurate, and educational. Use **bold** for key terms.`;
             document.getElementById('errorSection').style.display = 'none';
             document.getElementById('contentSection').style.display = 'none';
             
-            // Show immediate feedback
-            document.getElementById('pageTitle').textContent = topic;
-            document.getElementById('pageCategory').textContent = "Loading...";
-            
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Timeout')), 10000)
-            );
+            // Быстрая загрузка изображения
+            const imageUrl = generateImage(topic);
+            document.getElementById('imageContainer').innerHTML = `
+                <img src="${imageUrl}" alt="${topic}" class="wiki-image">
+            `;
             
             try {
-                const prompt = createSimplePrompt(topic);
+                // Простой промт как в переводчике
+                const prompt = `Create a comprehensive article about "${topic}". Format as:
+Category: [category]
+Intro: [2-3 sentences]
+Key Facts: [bullet points]
+Content: [detailed paragraphs with **bold** important terms]
+Related: [comma separated topics]`;
                 
-                const fetchPromise = fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -458,47 +397,88 @@ Make content detailed, accurate, and educational. Use **bold** for key terms.`;
                     })
                 });
                 
-                const response = await Promise.race([fetchPromise, timeoutPromise]);
-                
-                if (!response.ok) throw new Error('API error');
-                
-                const data = await response.json();
-                const aiResponse = data?.choices?.[0]?.message?.content || "{}";
-                
-                let wikiData;
-                try {
-                    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        wikiData = JSON.parse(jsonMatch[0]);
-                        
-                        // Validate data
-                        if (!wikiData.title || wikiData.title.includes('[object Object]')) {
-                            throw new Error('Invalid data');
-                        }
-                        
-                        if (!wikiData.sections || !Array.isArray(wikiData.sections) || wikiData.sections.length === 0) {
-                            wikiData.sections = [{
-                                "title": "Overview",
-                                "content": `**${topic}** is a subject of significant interest and study across various fields.`
-                            }];
-                        }
-                    } else {
-                        throw new Error('No JSON found');
-                    }
-                } catch (parseError) {
-                    console.error('Parse error:', parseError);
-                    wikiData = createFallbackData(topic);
+                if (!response.ok) {
+                    throw new Error('API error');
                 }
                 
+                const data = await response.json();
+                const aiResponse = data?.choices?.[0]?.message?.content || "";
+                
+                // Парсим ответ
+                const wikiData = parseAIResponse(aiResponse, topic);
                 displayWikiPage(wikiData);
                 
             } catch (error) {
-                console.error('Generation error:', error);
-                document.getElementById('loadingSection').style.display = 'none';
-                document.getElementById('errorSection').style.display = 'block';
-            } finally {
-                isGenerating = false;
+                console.error('Error:', error);
+                // Используем fallback данные если API не работает
+                const fallbackData = createFallbackData(topic);
+                displayWikiPage(fallbackData);
             }
+            
+            document.getElementById('loadingSection').style.display = 'none';
+        }
+        
+        function parseAIResponse(text, topic) {
+            if (!text || text.includes('[object Object]')) {
+                return createFallbackData(topic);
+            }
+            
+            const categoryMatch = text.match(/Category:\s*(.+)/i);
+            const introMatch = text.match(/Intro:\s*(.+?)(?=\n\n|\nKey Facts:|$)/is);
+            const keyFactsMatch = text.match(/Key Facts:\s*(.+?)(?=\n\n|\nContent:|$)/is);
+            const contentMatch = text.match(/Content:\s*(.+?)(?=\n\n|\nRelated:|$)/is);
+            const relatedMatch = text.match(/Related:\s*(.+)/i);
+            
+            return {
+                title: topic,
+                category: categoryMatch ? categoryMatch[1].trim() : "General Knowledge",
+                intro: introMatch ? introMatch[1].trim() : `${topic} is an important topic worth exploring.`,
+                image_prompt: topic,
+                key_facts: keyFactsMatch ? 
+                    keyFactsMatch[1].split('\n').filter(line => line.trim()).map(line => ({
+                        title: line.replace(/^[•\-\*]\s*/, '').split(':')[0]?.trim() || "Fact",
+                        content: line.split(':').slice(1).join(':').trim() || line.replace(/^[•\-\*]\s*/, '').trim()
+                    })).slice(0, 4) : createDefaultFacts(topic),
+                sections: contentMatch ? [
+                    {
+                        title: "Overview",
+                        content: contentMatch[1].trim()
+                    },
+                    {
+                        title: "Detailed Analysis",
+                        content: `Further exploration of **${topic}** reveals additional insights and perspectives.`
+                    }
+                ] : createDefaultSections(topic),
+                related: relatedMatch ? 
+                    relatedMatch[1].split(',').map(t => t.trim()).slice(0, 4) : 
+                    ["Related Topic 1", "Related Topic 2", "Related Topic 3"]
+            };
+        }
+        
+        function createDefaultFacts(topic) {
+            return [
+                { title: "Definition", content: `The study of ${topic}` },
+                { title: "Significance", content: "Important field of knowledge" },
+                { title: "Applications", content: "Various practical uses" },
+                { title: "Research", content: "Ongoing studies and discoveries" }
+            ];
+        }
+        
+        function createDefaultSections(topic) {
+            return [
+                {
+                    title: "Overview",
+                    content: `**${topic}** is a significant area of study with broad implications. This article explores its key aspects and relevance.`
+                },
+                {
+                    title: "Historical Context",
+                    content: `The development of ${topic} has evolved over time, with contributions from various fields and researchers.`
+                },
+                {
+                    title: "Modern Relevance",
+                    content: `Today, ${topic} continues to be important with applications in multiple domains.`
+                }
+            ];
         }
         
         function createFallbackData(topic) {
@@ -506,27 +486,9 @@ Make content detailed, accurate, and educational. Use **bold** for key terms.`;
                 title: topic,
                 category: ["Science", "History", "Technology"][Math.floor(Math.random() * 3)],
                 intro: `${topic} represents a significant area of study and interest. This article provides comprehensive information about its various aspects and importance.`,
-                image_prompt: `detailed realistic ${topic}`,
-                key_facts: [
-                    { title: "Definition", content: `The study or concept of ${topic}` },
-                    { title: "Significance", content: "Important field of knowledge" },
-                    { title: "Scope", content: "Broad interdisciplinary relevance" },
-                    { title: "Applications", content: "Various practical uses" }
-                ],
-                sections: [
-                    {
-                        title: "Overview",
-                        content: `**${topic}** encompasses a wide range of concepts and applications that have evolved over time. Its study contributes to our understanding of related fields and continues to be relevant in contemporary discourse.`
-                    },
-                    {
-                        title: "Historical Context",
-                        content: `The concept of ${topic} has historical roots dating back centuries. Various civilizations and thinkers have contributed to its development, leading to the modern understanding we have today.`
-                    },
-                    {
-                        title: "Key Aspects",
-                        content: `Key aspects include theoretical foundations, practical applications, and ongoing research. The field continues to evolve with new discoveries and technological advancements.`
-                    }
-                ]
+                image_prompt: topic,
+                key_facts: createDefaultFacts(topic),
+                sections: createDefaultSections(topic)
             };
         }
         
@@ -547,14 +509,6 @@ Make content detailed, accurate, and educational. Use **bold** for key terms.`;
             document.getElementById('pageCategory').textContent = wikiData.category || "General Knowledge";
             document.getElementById('pageIntro').innerHTML = formatText(wikiData.intro);
             
-            // Generate image
-            const imageUrl = generateImage(wikiData.image_prompt || wikiData.title || currentTopic);
-            document.getElementById('imageContainer').innerHTML = `
-                <img src="${imageUrl}" alt="${wikiData.title || currentTopic}" class="wiki-image" 
-                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&h=400&fit=crop';">
-            `;
-            
-            // Display key facts
             const factsHtml = (wikiData.key_facts || []).map(fact => `
                 <div class="info-card">
                     <div class="info-title">${fact.title || "Fact"}</div>
@@ -563,7 +517,6 @@ Make content detailed, accurate, and educational. Use **bold** for key terms.`;
             `).join('');
             document.getElementById('keyFactsGrid').innerHTML = factsHtml;
             
-            // Display sections
             const sectionsHtml = (wikiData.sections || []).map(section => `
                 <div class="content-section">
                     <h2 class="section-title">${section.title || "Section"}</h2>
@@ -584,7 +537,7 @@ Make content detailed, accurate, and educational. Use **bold** for key terms.`;
         }
         
         function retryGeneration() {
-            if (currentTopic && !isGenerating) {
+            if (currentTopic) {
                 generateWikiPage(currentTopic);
             }
         }
@@ -604,14 +557,13 @@ Make content detailed, accurate, and educational. Use **bold** for key terms.`;
         }
         
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !isGenerating) {
+            if (e.key === 'Enter') {
                 searchTopic();
             }
         });
         
         window.onload = function() {
             checkUrlForTopic();
-            
             document.getElementById('searchInput').focus();
         };
     </script>
