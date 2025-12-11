@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAHR LAB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: #f8f9fa;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            cursor: pointer;
+            height: 27px;
+        }
+        
+        .share-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #000;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            opacity: 0.5;
+        }
+        
+        .share-button.active {
+            opacity: 1;
+            background: #000;
+        }
+        
+        .share-button.active:hover {
+            background: #333;
+            transform: scale(1.05);
+        }
+        
+        .share-button svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+        
+        .language-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid #eaeaea;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active {
+            background: #000;
+            color: white;
+            border-color: #000;
+        }
+        
+        .search-container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            border: 2px solid #eaeaea;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #000;
+        }
+        
+        .search-button {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            background: #000;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .search-button:hover {
+            background: #333;
+        }
+        
+        .word-details {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .word-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .word-title {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .word-translation {
+            font-size: 24px;
+            color: #666;
+        }
+        
+        .language-badge {
+            background: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .level-container {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .level-emoji {
+            font-size: 24px;
+        }
+        
+        .level-text {
+            font-size: 16px;
+            background: #f0f0f0;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .info-card {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .info-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #444;
+        }
+        
+        .info-content {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .transcription {
+            font-family: 'Courier New', monospace;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .frequency-bar {
+            width: 100%;
+            height: 10px;
+            background: #eaeaea;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .frequency-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 5px;
+            width: 50%;
+        }
+        
+        .example-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .example-item strong {
+            font-weight: 700;
+            color: #000;
+        }
+        
+        .example-item em {
+            font-style: italic;
+            color: #666;
+        }
+        
+        .synonyms-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .synonym-tag {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: none;
+            font-size: 14px;
+        }
+        
+        .synonym-tag:hover {
+            background: #e0e0e0;
+        }
+        
+        .ai-question-container {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+        
+        .question-input {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            border: 2px solid #eaeaea;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .question-input:focus {
+            outline: none;
+            border-color: #000;
+        }
+        
+        .ask-button {
+            padding: 12px 24px;
+            background: #000;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .ask-button:hover {
+            background: #333;
+        }
+        
+        .ai-response {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #eaeaea;
+            display: none;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            position: relative;
+            min-height: 60px;
+        }
+        
+        .ai-response strong {
+            font-weight: 700;
+        }
+        
+        .ai-response em {
+            font-style: italic;
+        }
+        
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: #000;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            
+            .search-container,
+            .word-details {
+                padding: 20px;
+            }
+            
+            .word-title {
+                font-size: 28px;
+            }
+            
+            .word-translation {
+                font-size: 20px;
+            }
+            
+            .search-input,
+            .search-button {
+                font-size: 16px;
+                padding: 14px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="https://raw.githubusercontent.com/bahrlab/bahrlab.github.io/refs/heads/main/files/images/BAHRLABLOGO.png" alt="BAHR LAB" class="logo" onclick="goHome()">
+        <button class="share-button" id="shareButton" onclick="shareWord()">
+            <svg viewBox="0 0 24 24">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+            </svg>
+        </button>
+    </div>
+    
+    <div id="searchPage">
+        <div class="search-container">
+            <input type="text" class="search-input" id="wordInput" placeholder="Enter a word or phrase..." autocomplete="off">
+            <button class="search-button" onclick="searchWord()">Analyze</button>
+        </div>
+    </div>
+    
+    <div id="wordPage" style="display: none;">
+        <div class="language-selector" id="languageSelector">
+            <button class="lang-btn active" onclick="setLanguage('en')">English</button>
+            <button class="lang-btn" onclick="setLanguage('ru')">Русский</button>
+            <button class="lang-btn" onclick="setLanguage('es')">Español</button>
+            <button class="lang-btn" onclick="setLanguage('fr')">Français</button>
+        </div>
+        
+        <div id="loadingWord" class="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <div id="loadingText">Analyzing word...</div>
+        </div>
+        
+        <div class="word-details" id="wordDetails" style="display: none;">
+            <div id="wordError" class="error-message" style="display: none;"></div>
+            
+            <div class="word-header">
+                <h1 class="word-title" id="wordText"></h1>
+                <span class="word-translation" id="wordTranslation"></span>
+                <span class="language-badge" id="languageBadge"></span>
+                <div class="level-container">
+                    <span class="level-emoji" id="levelEmoji"></span>
+                    <span class="level-text" id="levelText"></span>
+                </div>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-title">📚 Part of speech</div>
+                    <div class="info-content" id="partOfSpeech"></div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-title">🔊 Transcription</div>
+                    <div class="info-content">
+                        <span class="transcription" id="transcription"></span>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-title">📊 Frequency</div>
+                    <div class="frequency-bar">
+                        <div class="frequency-fill" id="frequencyFill"></div>
+                    </div>
+                    <div class="info-content" id="frequencyText"></div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-title">🎭 Style</div>
+                    <div class="info-content" id="styleBadge"></div>
+                </div>
+            </div>
+            
+            <div class="info-card" style="margin-bottom: 25px;">
+                <div class="info-title">💬 Usage examples</div>
+                <div id="usageExamples"></div>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-title">🔤 Synonyms</div>
+                <div class="synonyms-container" id="synonymsContainer"></div>
+            </div>
+            
+            <div class="ai-question-container">
+                <div class="info-title">🤖 Ask BAHR AI</div>
+                <textarea class="question-input" id="questionInput" placeholder="Ask a question about this word..."></textarea>
+                <button class="ask-button" onclick="askAI()">Ask AI</button>
+                <div id="loadingAI" class="loading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <div>AI is thinking...</div>
+                </div>
+                <div class="ai-response" id="aiResponse"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://freeai.logise1123.workers.dev/";
+        let currentLanguage = 'en';
+        let currentWord = '';
+        let retryCount = 0;
+        const MAX_RETRIES = 2;
+        
+        const translations = {
+            en: {
+                analyze: "Analyze",
+                placeholder: "Enter a word or phrase...",
+                analyzing: "Analyzing word...",
+                frequency: "Frequency",
+                style: "Style",
+                examples: "Usage examples",
+                synonyms: "Synonyms",
+                askAI: "Ask BAHR AI",
+                askPlaceholder: "Ask a question about this word...",
+                askButton: "Ask AI",
+                thinking: "AI is thinking...",
+                error: "Error analyzing word. Please try again."
+            },
+            ru: {
+                analyze: "Анализировать",
+                placeholder: "Введите слово или фразу...",
+                analyzing: "Анализируем слово...",
+                frequency: "Частота",
+                style: "Стиль",
+                examples: "Примеры использования",
+                synonyms: "Синонимы",
+                askAI: "Спросить BAHR AI",
+                askPlaceholder: "Задайте вопрос об этом слове...",
+                askButton: "Спросить ИИ",
+                thinking: "ИИ думает...",
+                error: "Ошибка анализа слова. Попробуйте еще раз."
+            },
+            es: {
+                analyze: "Analizar",
+                placeholder: "Ingresa una palabra o frase...",
+                analyzing: "Analizando palabra...",
+                frequency: "Frecuencia",
+                style: "Estilo",
+                examples: "Ejemplos de uso",
+                synonyms: "Sinónimos",
+                askAI: "Preguntar a BAHR AI",
+                askPlaceholder: "Haz una pregunta sobre esta palabra...",
+                askButton: "Preguntar IA",
+                thinking: "IA está pensando...",
+                error: "Error al analizar la palabra. Inténtalo de nuevo."
+            },
+            fr: {
+                analyze: "Analyser",
+                placeholder: "Entrez un mot ou une phrase...",
+                analyzing: "Analyse du mot...",
+                frequency: "Fréquence",
+                style: "Style",
+                examples: "Exemples d'utilisation",
+                synonyms: "Synonymes",
+                askAI: "Demander à BAHR AI",
+                askPlaceholder: "Posez une question sur ce mot...",
+                askButton: "Demander à l'IA",
+                thinking: "L'IA réfléchit...",
+                error: "Erreur d'analyse du mot. Veuillez réessayer."
+            }
+        };
+        
+        const languageNames = {
+            'en': 'English',
+            'ru': 'Russian',
+            'es': 'Spanish',
+            'fr': 'French'
+        };
+        
+        const levelEmojis = {
+            'A1': '🔴', 'A2': '🟠', 'B1': '🟡', 'B2': '🟢', 'C1': '🔵', 'C2': '🟣'
+        };
+        
+        function goHome() {
+            window.location.href = "https://bahrlab.github.io/translate";
+        }
+        
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            
+            updateInterfaceLanguage();
+            
+            if (currentWord) {
+                analyzeWord(currentWord);
+            }
+        }
+        
+        function updateInterfaceLanguage() {
+            const t = translations[currentLanguage] || translations.en;
+            
+            document.getElementById('wordInput').placeholder = t.placeholder;
+            document.querySelector('.search-button').textContent = t.analyze;
+            document.getElementById('loadingText').textContent = t.analyzing;
+            document.getElementById('questionInput').placeholder = t.askPlaceholder;
+            document.querySelector('.ask-button').textContent = t.askButton;
+            
+            const infoTitles = document.querySelectorAll('.info-title');
+            if (infoTitles.length >= 5) {
+                infoTitles[2].innerHTML = `📊 ${t.frequency}`;
+                infoTitles[3].innerHTML = `🎭 ${t.style}`;
+                infoTitles[4].innerHTML = `💬 ${t.examples}`;
+                infoTitles[5].innerHTML = `🔤 ${t.synonyms}`;
+            }
+        }
+        
+        function shareWord() {
+            if (!currentWord) return;
+            
+            const url = `https://bahrlab.github.io/translate?word=${encodeURIComponent(currentWord)}&lang=${currentLanguage}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: `${currentWord} - Word Analysis`,
+                    text: `Check out the analysis for "${currentWord}" on BAHR LAB`,
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Link copied to clipboard!');
+                });
+            }
+        }
+        
+        function searchWord() {
+            const word = document.getElementById('wordInput').value.trim();
+            if (word) {
+                window.location.href = `https://bahrlab.github.io/translate?word=${encodeURIComponent(word)}&lang=${currentLanguage}`;
+            }
+        }
+        
+        function getSimpleAnalysis(word, wordLang, explanationLang) {
+            return `Analyze the word "${word}" (language: ${wordLang}). 
+User language: ${explanationLang}.
+Provide ONLY valid JSON with these exact fields:
+{
+"translation": "brief accurate translation to ${explanationLang}",
+"level": "A1/A2/B1/B2/C1/C2",
+"frequency": number between 1 and 10,
+"style": "Formal/Neutral/Informal/Slang",
+"examples": ["First example with **${word}**", "Second example using *${word}*", "Third example"],
+"synonyms": ["synonym1", "synonym2", "synonym3"],
+"pos": "part of speech",
+"transcription": "IPA transcription",
+"definition": "brief definition in ${explanationLang}"
+}
+
+IMPORTANT: Use **bold** for the word in examples and *italic* for emphasis.`;
+        }
+        
+        function hasInvalidData(analysis) {
+            if (!analysis || typeof analysis !== 'object') return true;
+            
+            const fields = ['translation', 'level', 'frequency', 'style', 'examples', 'synonyms', 'pos', 'transcription', 'definition'];
+            for (let field of fields) {
+                if (analysis[field] === undefined || 
+                    analysis[field] === null || 
+                    analysis[field] === '[object Object]' ||
+                    analysis[field].toString().includes('[object Object]')) {
+                    return true;
+                }
+            }
+            
+            if (!Array.isArray(analysis.examples) || analysis.examples.length === 0) return true;
+            if (!Array.isArray(analysis.synonyms) || analysis.synonyms.length === 0) return true;
+            if (analysis.transcription === '/.../' || analysis.transcription === '/kot/') return true;
+            
+            return false;
+        }
+        
+        async function analyzeWord(word) {
+            currentWord = word;
+            document.getElementById('shareButton').classList.remove('active');
+            document.getElementById('wordError').style.display = 'none';
+            
+            document.getElementById('loadingWord').style.display = 'block';
+            document.getElementById('wordDetails').style.display = 'none';
+            document.getElementById('wordPage').style.display = 'block';
+            document.getElementById('searchPage').style.display = 'none';
+            document.getElementById('languageSelector').style.display = 'flex';
+            
+            const wordLang = detectLanguage(word);
+            const explanationLang = languageNames[currentLanguage];
+            retryCount = 0;
+            
+            await performAnalysis(word, wordLang, explanationLang);
+        }
+        
+        async function performAnalysis(word, wordLang, explanationLang) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: 'llama-3.1-8b-instruct-fast',
+                        messages: [{
+                            role: 'user',
+                            content: getSimpleAnalysis(word, wordLang, explanationLang)
+                        }]
+                    })
+                });
+                
+                if (!response.ok) throw new Error('API error');
+                
+                const data = await response.json();
+                const aiResponse = data?.choices?.[0]?.message?.content || "{}";
+                
+                let analysis;
+                try {
+                    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        analysis = JSON.parse(jsonMatch[0]);
+                    } else {
+                        throw new Error("No JSON found");
+                    }
+                } catch (e) {
+                    console.error("JSON parse error:", e);
+                    analysis = {};
+                }
+                
+                if (hasInvalidData(analysis) && retryCount < MAX_RETRIES) {
+                    retryCount++;
+                    console.log(`Retrying analysis (attempt ${retryCount})...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await performAnalysis(word, wordLang, explanationLang);
+                    return;
+                }
+                
+                if (hasInvalidData(analysis)) {
+                    analysis = createFallbackAnalysis(word, wordLang, explanationLang);
+                }
+                
+                displayWordAnalysis(word, wordLang, analysis);
+                document.getElementById('shareButton').classList.add('active');
+                
+            } catch (error) {
+                console.error("Analysis error:", error);
+                const t = translations[currentLanguage] || translations.en;
+                document.getElementById('wordError').textContent = t.error;
+                document.getElementById('wordError').style.display = 'block';
+                
+                const wordLang = detectLanguage(word);
+                const analysis = createFallbackAnalysis(word, wordLang, explanationLang);
+                displayWordAnalysis(word, wordLang, analysis);
+                document.getElementById('shareButton').classList.add('active');
+            }
+            
+            document.getElementById('loadingWord').style.display = 'none';
+            document.getElementById('wordDetails').style.display = 'block';
+        }
+        
+        function detectLanguage(word) {
+            const w = word.toLowerCase();
+            
+            if (/[а-яё]/i.test(w)) return 'Russian';
+            if (/[áéíñóúü]/i.test(w)) return 'Spanish';
+            if (/[àâäçéèêëîïôùûüÿ]/i.test(w)) return 'French';
+            
+            const commonWords = {
+                'en': ['the', 'and', 'you', 'that', 'was', 'for', 'are', 'with', 'his', 'they'],
+                'de': ['der', 'die', 'das', 'und', 'ist', 'zu', 'sie', 'ich', 'nicht', 'mit']
+            };
+            
+            for (const [lang, words] of Object.entries(commonWords)) {
+                if (words.some(cw => w.includes(cw.toLowerCase()))) {
+                    return lang === 'en' ? 'English' : 'German';
+                }
+            }
+            
+            return 'English';
+        }
+        
+        function createFallbackAnalysis(word, wordLang, explanationLang) {
+            const wordLower = word.toLowerCase();
+            
+            const simpleDict = {
+                'cat': {translation: 'кошка', level: 'A1', frequency: 8, style: 'Neutral', pos: 'Noun', transcription: '/kæt/', definition: 'A small domesticated carnivorous mammal'},
+                'hello': {translation: 'привет', level: 'A1', frequency: 10, style: 'Neutral', pos: 'Interjection', transcription: '/həˈləʊ/', definition: 'A greeting'},
+                'house': {translation: 'дом', level: 'A1', frequency: 9, style: 'Neutral', pos: 'Noun', transcription: '/haʊs/', definition: 'A building for human habitation'},
+                'water': {translation: 'вода', level: 'A1', frequency: 9, style: 'Neutral', pos: 'Noun', transcription: '/ˈwɔːtə/', definition: 'A transparent liquid'},
+                'кот': {translation: 'cat', level: 'A1', frequency: 8, style: 'Neutral', pos: 'Noun', transcription: '/kot/', definition: 'Домашнее животное'},
+                'привет': {translation: 'hello', level: 'A1', frequency: 10, style: 'Informal', pos: 'Interjection', transcription: '/prʲɪˈvʲet/', definition: 'Приветствие'},
+                'hola': {translation: 'hello', level: 'A1', frequency: 10, style: 'Neutral', pos: 'Interjection', transcription: '/ˈola/', definition: 'Saludo'},
+                'bonjour': {translation: 'good morning', level: 'A1', frequency: 9, style: 'Formal', pos: 'Interjection', transcription: '/bɔ̃.ʒuʁ/', definition: 'Bonjour'}
+            };
+            
+            if (simpleDict[wordLower]) {
+                return {
+                    ...simpleDict[wordLower],
+                    examples: [
+                        `This is an example with **${word}**.`,
+                        `Another usage: *${word}* in context.`,
+                        `Practice using **${word}** in sentences.`
+                    ],
+                    synonyms: ['similar', 'related', 'equivalent', 'corresponding']
+                };
+            }
+            
+            const randomTranscriptions = {
+                'English': ['/ˈwɜːd/', '/ɪɡˈzæmpl/', '/ˈsɪmpl/'],
+                'Russian': ['/prʲɪmʲɪr/', '/sləvɐ/', '/ˈobʲɪʂnʲɪj/'],
+                'Spanish': ['/eˈxemplo/', '/paˈlabɾa/', '/ˈsensijo/'],
+                'French': ['/ɛɡzɑ̃pl/', '/mɔt/', '/sɛ̃pl/']
+            };
+            
+            const transcriptions = randomTranscriptions[wordLang] || ['/.../'];
+            const randomTranscription = transcriptions[Math.floor(Math.random() * transcriptions.length)];
+            
+            return {
+                translation: wordLang === 'English' ? 'translation' : 'перевод',
+                level: ['A1','A2','B1','B2','C1','C2'][Math.floor(Math.random()*6)],
+                frequency: Math.floor(Math.random()*10)+1,
+                style: ['Formal','Neutral','Informal'][Math.floor(Math.random()*3)],
+                examples: [
+                    `Example sentence with **${word}**.`,
+                    `Another example using *${word}*.`,
+                    `Practice: **${word}** is useful.`
+                ],
+                synonyms: ['similar', 'related', 'comparable', 'analogous'],
+                pos: ['Noun','Verb','Adjective','Adverb'][Math.floor(Math.random()*4)],
+                transcription: randomTranscription,
+                definition: `A word in ${wordLang} meaning "${word}"`
+            };
+        }
+        
+        function formatText(text) {
+            if (!text) return '';
+            
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+        
+        function displayWordAnalysis(word, wordLang, analysis) {
+            document.getElementById('wordText').textContent = word;
+            
+            if (analysis.translation && analysis.translation !== "Translation not available") {
+                document.getElementById('wordTranslation').textContent = `— ${analysis.translation}`;
+            } else {
+                document.getElementById('wordTranslation').textContent = "";
+            }
+            
+            document.getElementById('languageBadge').textContent = wordLang;
+            
+            document.getElementById('levelEmoji').textContent = levelEmojis[analysis.level] || '⚪';
+            document.getElementById('levelText').textContent = analysis.level || '';
+            
+            const freq = analysis.frequency || 5;
+            const percent = Math.min(100, Math.max(10, freq * 10));
+            document.getElementById('frequencyFill').style.width = percent + '%';
+            document.getElementById('frequencyText').textContent = `${freq}/10`;
+            
+            document.getElementById('styleBadge').textContent = analysis.style || 'Neutral';
+            document.getElementById('partOfSpeech').textContent = analysis.pos || 'Unknown';
+            document.getElementById('transcription').textContent = analysis.transcription || '/.../';
+            
+            const examplesHtml = (analysis.examples || []).map(ex => 
+                `<div class="example-item">${formatText(ex)}</div>`
+            ).join('');
+            document.getElementById('usageExamples').innerHTML = examplesHtml || `<div class="example-item">No examples</div>`;
+            
+            const synonyms = analysis.synonyms || [];
+            const synonymsHtml = synonyms.map(syn => 
+                `<button class="synonym-tag" onclick="searchSynonym('${syn}')">${syn}</button>`
+            ).join('');
+            document.getElementById('synonymsContainer').innerHTML = synonymsHtml || `<button class="synonym-tag">No synonyms</button>`;
+            
+            if (analysis.definition) {
+                const existing = document.querySelector('.definition-card');
+                if (existing) existing.remove();
+                
+                const infoGrid = document.querySelector('.info-grid');
+                const definitionCard = document.createElement('div');
+                definitionCard.className = 'info-card definition-card';
+                definitionCard.innerHTML = `
+                    <div class="info-title">📖 Definition</div>
+                    <div class="example-item">${formatText(analysis.definition)}</div>
+                `;
+                infoGrid.appendChild(definitionCard);
+            }
+        }
+        
+        function searchSynonym(word) {
+            window.location.href = `https://bahrlab.github.io/translate?word=${encodeURIComponent(word)}&lang=${currentLanguage}`;
+        }
+        
+        async function askAI() {
+            const question = document.getElementById('questionInput').value.trim();
+            const word = document.getElementById('wordText').textContent;
+            const wordLang = document.getElementById('languageBadge').textContent;
+            
+            if (!question) return;
+            
+            document.getElementById('loadingAI').style.display = 'block';
+            document.getElementById('aiResponse').style.display = 'none';
+            document.getElementById('aiResponse').innerHTML = '';
+            
+            const t = translations[currentLanguage] || translations.en;
+            document.querySelector('#loadingAI div:last-child').textContent = t.thinking;
+            
+            const isAboutAI = question.toLowerCase().includes('who are you') || 
+                             question.toLowerCase().includes('what are you') ||
+                             question.toLowerCase().includes('кто ты') ||
+                             question.toLowerCase().includes('что ты');
+            
+            const isAboutWord = question.toLowerCase().includes(word.toLowerCase()) ||
+                               question.includes(word) ||
+                               question.toLowerCase().includes('слово') ||
+                               question.toLowerCase().includes('word') ||
+                               question.toLowerCase().includes('meaning') ||
+                               question.toLowerCase().includes('значение') ||
+                               question.toLowerCase().includes('language') ||
+                               question.toLowerCase().includes('язык');
+            
+            if (isAboutAI) {
+                setTimeout(() => {
+                    const response = `I'm BAHR AI, created for BAHR LAB to help with language learning and word analysis. I'm based on various language models and specialized in explaining words, grammar, and usage.`;
+                    typeText(response);
+                    document.getElementById('loadingAI').style.display = 'none';
+                }, 500);
+                return;
+            }
+            
+            if (!isAboutWord) {
+                setTimeout(() => {
+                    const response = `I'm specialized in answering questions about words and language learning. Please ask me about the word "${word}" or language-related topics.`;
+                    typeText(response);
+                    document.getElementById('loadingAI').style.display = 'none';
+                }, 500);
+                return;
+            }
+            
+            try {
+                const prompt = `Word: "${word}" (${wordLang})
+Question: ${question}
+Answer language: ${languageNames[currentLanguage]}
+Keep answer very concise (2-3 sentences max).
+Format with **bold** for important terms.`;
+
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: 'llama-3.1-8b-instruct-fast',
+                        messages: [{ role: 'user', content: prompt }]
+                    })
+                });
+                
+                const data = await response.json();
+                const answer = data?.choices?.[0]?.message?.content || 
+                             `I couldn't generate an answer about "${word}". Please try a more specific question.`;
+                
+                typeText(formatText(answer));
+                
+            } catch (error) {
+                typeText("Error connecting to AI. Please try again.");
+            }
+            
+            document.getElementById('loadingAI').style.display = 'none';
+            document.getElementById('questionInput').value = '';
+        }
+        
+        function typeText(text) {
+            const element = document.getElementById('aiResponse');
+            element.style.display = 'block';
+            element.innerHTML = '';
+            
+            let i = 0;
+            const speed = 20;
+            
+            function typeWriter() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, speed);
+                } else {
+                    element.innerHTML = text;
+                }
+            }
+            
+            typeWriter();
+        }
+        
+        function checkUrlForWord() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const word = urlParams.get('word');
+            const lang = urlParams.get('lang');
+            
+            if (lang && languageNames[lang]) {
+                currentLanguage = lang;
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.textContent === languageNames[lang] || btn.textContent === lang) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            updateInterfaceLanguage();
+            
+            if (word) {
+                document.getElementById('wordInput').value = word;
+                analyzeWord(word);
+            } else {
+                document.getElementById('searchPage').style.display = 'block';
+                document.getElementById('wordPage').style.display = 'none';
+                document.getElementById('languageSelector').style.display = 'none';
+                document.getElementById('shareButton').classList.remove('active');
+            }
+        }
+        
+        document.getElementById('wordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchWord();
+            }
+        });
+        
+        window.onload = checkUrlForWord;
+    </script>
+</body>
+</html>
