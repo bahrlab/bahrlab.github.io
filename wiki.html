@@ -122,6 +122,12 @@
         .image-container {
             text-align: center;
             margin: 30px 0;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 12px;
         }
         
         .wiki-image {
@@ -130,6 +136,11 @@
             max-height: 400px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .image-loading {
+            color: #666;
+            font-size: 16px;
         }
         
         .content-section {
@@ -318,7 +329,9 @@
                 <div class="wiki-text" id="pageIntro"></div>
             </div>
             
-            <div class="image-container" id="imageContainer"></div>
+            <div class="image-container" id="imageContainer">
+                <div class="image-loading">Loading image...</div>
+            </div>
             
             <div class="info-grid" id="keyFactsGrid"></div>
             
@@ -373,20 +386,23 @@
             document.getElementById('errorSection').style.display = 'none';
             document.getElementById('contentSection').style.display = 'none';
             
-            // Быстрая загрузка изображения
-            const imageUrl = generateImage(topic);
-            document.getElementById('imageContainer').innerHTML = `
-                <img src="${imageUrl}" alt="${topic}" class="wiki-image">
-            `;
+            document.getElementById('pageTitle').textContent = topic;
+            document.getElementById('pageCategory').textContent = "Loading...";
+            document.getElementById('pageIntro').textContent = "";
+            
+            // Начинаем загрузку изображения отдельно
+            loadImage(topic);
             
             try {
-                // Простой промт как в переводчике
-                const prompt = `Create a comprehensive article about "${topic}". Format as:
-Category: [category]
-Intro: [2-3 sentences]
-Key Facts: [bullet points]
-Content: [detailed paragraphs with **bold** important terms]
-Related: [comma separated topics]`;
+                // СУПЕР ПРОСТОЙ ПРОМТ КАК В ПЕРЕВОДЧИКЕ
+                const prompt = `Write a short encyclopedia article about "${topic}". 
+Start with category in brackets like [Science].
+Then write 2-3 paragraph introduction.
+Then list 4 key facts with -.
+End with a conclusion.`;
+                
+                console.log("Sending request to AI...");
+                const startTime = Date.now();
                 
                 const response = await fetch(API_URL, {
                     method: "POST",
@@ -397,99 +413,133 @@ Related: [comma separated topics]`;
                     })
                 });
                 
+                console.log("Response received in:", Date.now() - startTime, "ms");
+                
                 if (!response.ok) {
-                    throw new Error('API error');
+                    throw new Error('API error: ' + response.status);
                 }
                 
                 const data = await response.json();
                 const aiResponse = data?.choices?.[0]?.message?.content || "";
                 
-                // Парсим ответ
-                const wikiData = parseAIResponse(aiResponse, topic);
+                console.log("AI Response:", aiResponse.substring(0, 200));
+                
+                if (!aiResponse || aiResponse.includes('[object Object]') || aiResponse.length < 50) {
+                    throw new Error('Empty or invalid response');
+                }
+                
+                // Парсим простой ответ
+                const wikiData = parseSimpleResponse(aiResponse, topic);
                 displayWikiPage(wikiData);
                 
             } catch (error) {
-                console.error('Error:', error);
-                // Используем fallback данные если API не работает
-                const fallbackData = createFallbackData(topic);
+                console.error('Error generating article:', error);
+                
+                // Быстрый фоллбек - показываем хотя бы что-то
+                const fallbackData = createQuickFallback(topic);
                 displayWikiPage(fallbackData);
             }
             
             document.getElementById('loadingSection').style.display = 'none';
         }
         
-        function parseAIResponse(text, topic) {
-            if (!text || text.includes('[object Object]')) {
-                return createFallbackData(topic);
+        function parseSimpleResponse(text, topic) {
+            // Ищем категорию в скобках
+            const categoryMatch = text.match(/\[(.*?)\]/);
+            const category = categoryMatch ? categoryMatch[1] : "General Knowledge";
+            
+            // Убираем категорию из текста
+            let content = text.replace(/\[.*?\]/, '').trim();
+            
+            // Разделяем на абзацы
+            const paragraphs = content.split(/\n\n+/);
+            
+            // Первые 2-3 абзаца - введение
+            const intro = paragraphs.slice(0, Math.min(3, paragraphs.length)).join('\n\n');
+            
+            // Ищем факты с дефисами
+            const facts = [];
+            const lines = content.split('\n');
+            for (const line of lines) {
+                if (line.trim().startsWith('-') && facts.length < 4) {
+                    const factText = line.trim().substring(1).trim();
+                    facts.push({
+                        title: factText.split(':')[0]?.trim() || "Fact",
+                        content: factText.split(':').slice(1).join(':').trim() || factText
+                    });
+                }
             }
             
-            const categoryMatch = text.match(/Category:\s*(.+)/i);
-            const introMatch = text.match(/Intro:\s*(.+?)(?=\n\n|\nKey Facts:|$)/is);
-            const keyFactsMatch = text.match(/Key Facts:\s*(.+?)(?=\n\n|\nContent:|$)/is);
-            const contentMatch = text.match(/Content:\s*(.+?)(?=\n\n|\nRelated:|$)/is);
-            const relatedMatch = text.match(/Related:\s*(.+)/i);
+            // Если фактов нет, создаем дефолтные
+            if (facts.length === 0) {
+                facts.push(
+                    { title: "Definition", content: `Study of ${topic}` },
+                    { title: "Importance", content: "Significant field of research" },
+                    { title: "Applications", content: "Various practical uses" },
+                    { title: "Research", content: "Ongoing studies" }
+                );
+            }
+            
+            // Создаем секции из оставшегося текста
+            const sections = [];
+            if (paragraphs.length > 3) {
+                sections.push({
+                    title: "Detailed Information",
+                    content: paragraphs.slice(3).join('\n\n')
+                });
+            } else {
+                sections.push({
+                    title: "Overview",
+                    content: intro || `${topic} is an important topic worth exploring.`
+                });
+            }
             
             return {
                 title: topic,
-                category: categoryMatch ? categoryMatch[1].trim() : "General Knowledge",
-                intro: introMatch ? introMatch[1].trim() : `${topic} is an important topic worth exploring.`,
-                image_prompt: topic,
-                key_facts: keyFactsMatch ? 
-                    keyFactsMatch[1].split('\n').filter(line => line.trim()).map(line => ({
-                        title: line.replace(/^[•\-\*]\s*/, '').split(':')[0]?.trim() || "Fact",
-                        content: line.split(':').slice(1).join(':').trim() || line.replace(/^[•\-\*]\s*/, '').trim()
-                    })).slice(0, 4) : createDefaultFacts(topic),
-                sections: contentMatch ? [
-                    {
-                        title: "Overview",
-                        content: contentMatch[1].trim()
-                    },
-                    {
-                        title: "Detailed Analysis",
-                        content: `Further exploration of **${topic}** reveals additional insights and perspectives.`
-                    }
-                ] : createDefaultSections(topic),
-                related: relatedMatch ? 
-                    relatedMatch[1].split(',').map(t => t.trim()).slice(0, 4) : 
-                    ["Related Topic 1", "Related Topic 2", "Related Topic 3"]
+                category: category,
+                intro: intro || `${topic} is a fascinating subject with broad implications.`,
+                key_facts: facts.slice(0, 4),
+                sections: sections
             };
         }
         
-        function createDefaultFacts(topic) {
-            return [
-                { title: "Definition", content: `The study of ${topic}` },
-                { title: "Significance", content: "Important field of knowledge" },
-                { title: "Applications", content: "Various practical uses" },
-                { title: "Research", content: "Ongoing studies and discoveries" }
-            ];
-        }
-        
-        function createDefaultSections(topic) {
-            return [
-                {
-                    title: "Overview",
-                    content: `**${topic}** is a significant area of study with broad implications. This article explores its key aspects and relevance.`
-                },
-                {
-                    title: "Historical Context",
-                    content: `The development of ${topic} has evolved over time, with contributions from various fields and researchers.`
-                },
-                {
-                    title: "Modern Relevance",
-                    content: `Today, ${topic} continues to be important with applications in multiple domains.`
-                }
-            ];
-        }
-        
-        function createFallbackData(topic) {
+        function createQuickFallback(topic) {
             return {
                 title: topic,
                 category: ["Science", "History", "Technology"][Math.floor(Math.random() * 3)],
-                intro: `${topic} represents a significant area of study and interest. This article provides comprehensive information about its various aspects and importance.`,
-                image_prompt: topic,
-                key_facts: createDefaultFacts(topic),
-                sections: createDefaultSections(topic)
+                intro: `${topic} is an important area of study with significant implications across various fields. This article provides key insights and information.`,
+                key_facts: [
+                    { title: "Definition", content: `The study and application of ${topic}` },
+                    { title: "Significance", content: "Important field with wide relevance" },
+                    { title: "Key Aspects", content: "Multiple dimensions and perspectives" },
+                    { title: "Future", content: "Continued research and development" }
+                ],
+                sections: [
+                    {
+                        title: "Overview",
+                        content: `**${topic}** encompasses a range of concepts and applications. Its study has evolved over time and continues to be relevant in contemporary discourse.`
+                    }
+                ]
             };
+        }
+        
+        function loadImage(topic) {
+            const imageUrl = generateImage(topic);
+            const img = new Image();
+            
+            img.onload = function() {
+                document.getElementById('imageContainer').innerHTML = `
+                    <img src="${imageUrl}" alt="${topic}" class="wiki-image">
+                `;
+            };
+            
+            img.onerror = function() {
+                document.getElementById('imageContainer').innerHTML = `
+                    <div class="image-loading">Image not available</div>
+                `;
+            };
+            
+            img.src = imageUrl;
         }
         
         function formatText(text) {
