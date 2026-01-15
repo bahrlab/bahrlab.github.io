@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAHR LAB</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="main-styles.css">
+</head>
+<body>
+    <div class="header">
+        <img src="https://raw.githubusercontent.com/bahrlab/bahrlab.github.io/refs/heads/main/files/images/BAHRLABLOGO.png" alt="BAHR LAB" class="logo">
+    </div>
+    
+    <div class="main-content">
+        <h1 class="main-title">BAHR LAB AI Platform</h1>
+        <p class="subtitle">Explore AI-powered tools for learning, research, and creativity</p>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" id="mainSearch" placeholder="Search for tools or features...">
+            <button class="search-button" onclick="searchTools()">Search</button>
+        </div>
+        
+        <h2 class="section-title">Projects</h2>
+        <div class="projects-grid" id="projectsGrid">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <div>Loading projects...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main-script.js"></script>
+</body>
+</html>
