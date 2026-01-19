@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="header">
-        <img src="https://raw.githubusercontent.com/bahrlab/bahrlab.github.io/refs/heads/main/files/images/BAHRLABLOGO.png" alt="BAHR LAB" class="logo" onclick="goHome()">
+        <img src="https://raw.githubusercontent.com/bahrlab/bahrlab.github.io/refs/heads/main/files/images/BAHRLABLOGO.png" alt="BAHR LAB" class="logo" id="homeLogo">
     </div>
     
     <!-- Главная страница -->
@@ -20,7 +20,7 @@
             
             <div class="search-container">
                 <input type="text" class="search-input" id="searchInput" placeholder="Describe the chat scenario..." autocomplete="off">
-                <button class="search-button" onclick="quickGenerate()">Generate Chat</button>
+                <button class="search-button" id="quickGenerateBtn">Generate Chat</button>
             </div>
             
             <div class="quick-examples">
@@ -31,7 +31,7 @@
             </div>
             
             <div class="advanced-option">
-                <button class="advanced-button" onclick="showAdvancedSetup()">
+                <button class="advanced-button" id="advancedSetupBtn">
                     <span>⚙️</span> Advanced Setup
                 </button>
             </div>
@@ -64,7 +64,7 @@
                         <!-- Участники будут добавлены здесь -->
                     </div>
                     
-                    <button class="add-button" onclick="addParticipant()">
+                    <button class="add-button" id="addParticipantBtn">
                         <span>+</span> Add Participant
                     </button>
                 </div>
@@ -76,9 +76,9 @@
                         <div class="setting-item">
                             <label>Speed</label>
                             <div class="speed-controls">
-                                <button class="speed-btn" onclick="setSpeed('slow')">🐢 Slow</button>
-                                <button class="speed-btn active" onclick="setSpeed('normal')">🚶 Normal</button>
-                                <button class="speed-btn" onclick="setSpeed('fast')">🚀 Fast</button>
+                                <button class="speed-btn" data-speed="slow">🐢 Slow</button>
+                                <button class="speed-btn active" data-speed="normal">🚶 Normal</button>
+                                <button class="speed-btn" data-speed="fast">🚀 Fast</button>
                             </div>
                         </div>
                         
@@ -111,10 +111,10 @@
                 </div>
                 
                 <div class="action-buttons">
-                    <button class="action-button secondary" onclick="goBack()">
+                    <button class="action-button secondary" id="goBackBtn">
                         <span>←</span> Back
                     </button>
-                    <button class="action-button primary" onclick="startChat()">
+                    <button class="action-button primary" id="startChatBtn">
                         <span>💬</span> Start Chat
                     </button>
                 </div>
@@ -136,16 +136,16 @@
                 </div>
                 
                 <div class="chat-controls">
-                    <button class="control-btn" onclick="togglePause()" id="pauseBtn">
+                    <button class="control-btn" id="pauseBtn">
                         <span>⏸️</span> Pause
                     </button>
-                    <button class="control-btn" onclick="addCustomMessage()">
+                    <button class="control-btn" id="addMessageBtn">
                         <span>✏️</span> Add Message
                     </button>
-                    <button class="control-btn" onclick="regenerateLast()">
+                    <button class="control-btn" id="regenerateBtn">
                         <span>🔄</span> Regenerate
                     </button>
-                    <button class="control-btn" onclick="showExport()">
+                    <button class="control-btn" id="exportBtn">
                         <span>📤</span> Export
                     </button>
                 </div>
@@ -174,18 +174,10 @@
             
             <!-- Панель управления генерацией -->
             <div class="generation-controls">
-                <button class="gen-btn" onclick="generateMore(1)">
-                    +1 Message
-                </button>
-                <button class="gen-btn" onclick="generateMore(3)">
-                    +3 Messages
-                </button>
-                <button class="gen-btn" onclick="generateMore(5)">
-                    +5 Messages
-                </button>
-                <button class="gen-btn secondary" onclick="stopGeneration()">
-                    Stop
-                </button>
+                <button class="gen-btn" data-count="1">+1 Message</button>
+                <button class="gen-btn" data-count="3">+3 Messages</button>
+                <button class="gen-btn" data-count="5">+5 Messages</button>
+                <button class="gen-btn secondary" id="stopBtn">Stop</button>
             </div>
             
             <!-- Прогресс -->
@@ -205,12 +197,12 @@
         <div class="modal">
             <div class="modal-header">
                 <h3>Export Chat</h3>
-                <button class="close-modal" onclick="closeModal()">×</button>
+                <button class="close-modal" id="closeExportModal">×</button>
             </div>
             
             <div class="modal-content">
                 <div class="export-options">
-                    <button class="export-option" onclick="exportAsTXT()">
+                    <button class="export-option" id="exportTxtBtn">
                         <div class="export-icon">📄</div>
                         <div class="export-info">
                             <div class="export-title">Text File (.txt)</div>
@@ -218,7 +210,7 @@
                         </div>
                     </button>
                     
-                    <button class="export-option" onclick="exportAsHTML()">
+                    <button class="export-option" id="exportHtmlBtn">
                         <div class="export-icon">🌐</div>
                         <div class="export-info">
                             <div class="export-title">HTML Page</div>
@@ -226,7 +218,7 @@
                         </div>
                     </button>
                     
-                    <button class="export-option" onclick="copyChat()">
+                    <button class="export-option" id="copyChatBtn">
                         <div class="export-icon">📋</div>
                         <div class="export-info">
                             <div class="export-title">Copy to Clipboard</div>
@@ -258,7 +250,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h3>Add Custom Message</h3>
-                <button class="close-modal" onclick="closeMessageModal()">×</button>
+                <button class="close-modal" id="closeMessageModal">×</button>
             </div>
             
             <div class="modal-content">
@@ -276,17 +268,17 @@
                 
                 <div class="checkbox-group">
                     <label class="checkbox">
-                        <input type="checkbox" id="addReaction">
+                        <input type="checkbox" id="addReactionCheck">
                         <span>Add random reaction</span>
                     </label>
                 </div>
             </div>
             
             <div class="modal-actions">
-                <button class="modal-btn secondary" onclick="closeMessageModal()">
+                <button class="modal-btn secondary" id="cancelMessageBtn">
                     Cancel
                 </button>
-                <button class="modal-btn primary" onclick="sendCustomMessage()">
+                <button class="modal-btn primary" id="sendMessageBtn">
                     Add Message
                 </button>
             </div>
