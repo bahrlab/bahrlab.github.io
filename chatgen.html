@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAHR LAB - AI Chat Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="chatgen-styles.css">
+</head>
+<body>
+    <div class="header">
+        <img src="https://raw.githubusercontent.com/bahrlab/bahrlab.github.io/refs/heads/main/files/images/BAHRLABLOGO.png" alt="BAHR LAB" class="logo" onclick="goHome()">
+        <div class="header-controls">
+            <button class="header-btn" onclick="exportChat()" title="Export Chat">
+                <span>📤</span>
+            </button>
+            <button class="header-btn" onclick="shareChat()" title="Share Chat">
+                <span>🔗</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Создание чата -->
+    <div id="setupPage" class="main-content">
+        <h1 class="main-title">AI Chat Generator</h1>
+        <p class="subtitle">Generate realistic conversations between AI-powered characters</p>
+        
+        <div class="chat-setup-container">
+            <div class="setup-sections">
+                <!-- Базовые настройки -->
+                <div class="setup-section">
+                    <h2 class="section-title">📱 Chat Settings</h2>
+                    <div class="settings-grid">
+                        <div class="setting-group">
+                            <label class="setting-label">Chat Name</label>
+                            <input type="text" class="setting-input" id="chatName" placeholder="Enter chat name..." value="Group Chat">
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label class="setting-label">Chat Theme</label>
+                            <select class="setting-select" id="chatTheme">
+                                <option value="casual">Casual Conversation</option>
+                                <option value="drama">Dramatic Dialogue</option>
+                                <option value="comedy">Funny Chat</option>
+                                <option value="mystery">Mystery Discussion</option>
+                                <option value="business">Business Meeting</option>
+                                <option value="friends">Friends Chatting</option>
+                                <option value="family">Family Conversation</option>
+                                <option value="romance">Romantic Chat</option>
+                            </select>
+                        </div>
+                        
+                        <div class="setting-group full-width">
+                            <label class="setting-label">Chat Topic</label>
+                            <textarea class="setting-textarea" id="chatTopic" placeholder="What are they talking about?">Planning a surprise birthday party for a mutual friend. Some want it big and flashy, others prefer something small and intimate.</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Участники -->
+                <div class="setup-section">
+                    <h2 class="section-title">👥 Participants</h2>
+                    <div class="participants-container" id="participantsContainer">
+                        <!-- Участники будут добавлены сюда -->
+                    </div>
+                    
+                    <button class="add-btn" onclick="addParticipant()">
+                        <span>+</span> Add Participant
+                    </button>
+                </div>
+                
+                <!-- Дополнительные настройки -->
+                <div class="setup-section">
+                    <h2 class="section-title">⚙️ Advanced Settings</h2>
+                    <div class="advanced-settings">
+                        <div class="setting-group">
+                            <label class="setting-label">Chat Length</label>
+                            <div class="range-container">
+                                <input type="range" min="5" max="50" value="20" class="range-input" id="chatLength">
+                                <div class="range-value">
+                                    <span id="lengthValue">20</span> messages
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label class="setting-label">Response Speed</label>
+                            <div class="range-container">
+                                <input type="range" min="1" max="10" value="5" class="range-input" id="responseSpeed">
+                                <div class="range-labels">
+                                    <span>Slow</span>
+                                    <span>Medium</span>
+                                    <span>Fast</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label class="setting-label">Emoji Usage</label>
+                            <div class="range-container">
+                                <input type="range" min="0" max="10" value="5" class="range-input" id="emojiUsage">
+                                <div class="range-labels">
+                                    <span>None</span>
+                                    <span>Normal</span>
+                                    <span>Lots</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label class="setting-label">Include:</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="includeTyping" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span>Typing indicators</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="includeRead" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span>Read receipts</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="includeTime" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span>Timestamps</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="includeReactions">
+                                    <span class="checkbox-custom"></span>
+                                    <span>Message reactions</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-button primary" onclick="generateChat()">
+                    <span>💬</span> Generate Chat
+                </button>
+                <button class="action-button secondary" onclick="loadExample()">
+                    <span>✨</span> Load Example
+                </button>
+                <button class="action-button secondary" onclick="resetSettings()">
+                    <span>🔄</span> Reset All
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Чат -->
+    <div id="chatPage" style="display: none;">
+        <div class="chat-container">
+            <!-- Шапка чата -->
+            <div class="chat-header">
+                <div class="chat-info">
+                    <div class="chat-avatar" id="chatAvatar">
+                        <span>💬</span>
+                    </div>
+                    <div>
+                        <h2 class="chat-title" id="chatTitle"></h2>
+                        <div class="chat-subtitle" id="chatSubtitle">
+                            <span id="participantCount">0 participants</span>
+                            <span class="online-dot"></span>
+                            <span>Online</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-actions">
+                    <button class="chat-action-btn" onclick="addMessage()" title="Add Message">
+                        <span>✏️</span>
+                    </button>
+                    <button class="chat-action-btn" onclick="regenerateLast()" title="Regenerate Last">
+                        <span>🔄</span>
+                    </button>
+                    <button class="chat-action-btn" onclick="continueChat()" title="Continue Chat">
+                        <span>➕</span>
+                    </button>
+                    <button class="chat-action-btn" onclick="openSettings()" title="Settings">
+                        <span>⚙️</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Список участников -->
+            <div class="participants-bar" id="participantsBar">
+                <!-- Участники будут здесь -->
+            </div>
+            
+            <!-- Область сообщений -->
+            <div class="messages-container" id="messagesContainer">
+                <!-- Сообщения будут здесь -->
+                <div class="empty-chat" id="emptyChat">
+                    <div class="empty-icon">💬</div>
+                    <h3>Chat is empty</h3>
+                    <p>Click "Generate Chat" to start the conversation</p>
+                </div>
+            </div>
+            
+            <!-- Панель управления -->
+            <div class="control-panel">
+                <div class="control-buttons">
+                    <button class="control-btn" onclick="generateMore(5)">
+                        <span>➕5</span> Add 5 Messages
+                    </button>
+                    <button class="control-btn" onclick="generateMore(10)">
+                        <span>➕10</span> Add 10 Messages
+                    </button>
+                    <button class="control-btn" onclick="changeTopic()">
+                        <span>🔄</span> Change Topic
+                    </button>
+                    <button class="control-btn warning" onclick="clearChat()">
+                        <span>🗑️</span> Clear Chat
+                    </button>
+                </div>
+                
+                <div class="export-options">
+                    <button class="export-btn" onclick="exportAsTXT()">
+                        <span>📄</span> Export as TXT
+                    </button>
+                    <button class="export-btn" onclick="exportAsHTML()">
+                        <span>🌐</span> Export as HTML
+                    </button>
+                    <button class="export-btn" onclick="copyChat()">
+                        <span>📋</span> Copy Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Боковая панель настроек чата -->
+        <div class="chat-sidebar" id="chatSidebar">
+            <div class="sidebar-header">
+                <h3>⚙️ Chat Settings</h3>
+                <button class="close-sidebar" onclick="closeSidebar()">×</button>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <h4>Current Topic</h4>
+                    <p id="currentTopic"></p>
+                    <textarea class="sidebar-input" id="editTopic" placeholder="Change the topic..."></textarea>
+                    <button class="sidebar-btn" onclick="updateTopic()">Update Topic</button>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h4>Add Participant</h4>
+                    <input type="text" class="sidebar-input" id="newParticipantName" placeholder="Name">
+                    <input type="text" class="sidebar-input" id="newParticipantPersonality" placeholder="Personality">
+                    <button class="sidebar-btn" onclick="addNewParticipant()">Add to Chat</button>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h4>Chat Statistics</h4>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value" id="statMessages">0</span>
+                            <span class="stat-label">Messages</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="statParticipants">0</span>
+                            <span class="stat-label">Participants</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="statWords">0</span>
+                            <span class="stat-label">Words</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="statTime">0:00</span>
+                            <span class="stat-label">Duration</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h4>Quick Actions</h4>
+                    <div class="quick-actions">
+                        <button class="quick-action" onclick="addConflict()">
+                            <span>⚔️</span> Add Conflict
+                        </button>
+                        <button class="quick-action" onclick="addJoke()">
+                            <span>😂</span> Add Joke
+                        </button>
+                        <button class="quick-action" onclick="addSecret()">
+                            <span>🤫</span> Reveal Secret
+                        </button>
+                        <button class="quick-action" onclick="endChat()">
+                            <span>🏁</span> End Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Индикатор генерации -->
+        <div class="generation-indicator" id="generationIndicator">
+            <div class="indicator-content">
+                <div class="loading-spinner small"></div>
+                <div class="indicator-text" id="indicatorText">Generating chat...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно экспорта -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Export Chat</h3>
+                <button class="close-modal" onclick="closeExportModal()">×</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="export-format-selector">
+                    <div class="format-option active" data-format="txt" onclick="selectFormat('txt')">
+                        <div class="format-icon">📄</div>
+                        <div class="format-info">
+                            <div class="format-title">Text File (.txt)</div>
+                            <div class="format-desc">Plain text, easy to read</div>
+                        </div>
+                    </div>
+                    
+                    <div class="format-option" data-format="html" onclick="selectFormat('html')">
+                        <div class="format-icon">🌐</div>
+                        <div class="format-info">
+                            <div class="format-title">Web Page (.html)</div>
+                            <div class="format-desc">Styled like messaging app</div>
+                        </div>
+                    </div>
+                    
+                    <div class="format-option" data-format="json" onclick="selectFormat('json')">
+                        <div class="format-icon">🔧</div>
+                        <div class="format-info">
+                            <div class="format-title">JSON Data</div>
+                            <div class="format-desc">For developers and APIs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="format-option" data-format="image" onclick="selectFormat('image')">
+                        <div class="format-icon">🖼️</div>
+                        <div class="format-info">
+                            <div class="format-title">Image (.png)</div>
+                            <div class="format-desc">Screenshot of chat</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="export-preview" id="exportPreview">
+                    <!-- Превью будет здесь -->
+                </div>
+                
+                <div class="export-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="includeTimestamps" checked>
+                        <span class="checkbox-custom"></span>
+                        <span>Include timestamps</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="includeAvatars" checked>
+                        <span class="checkbox-custom"></span>
+                        <span>Include participant info</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="includeMetadata" checked>
+                        <span class="checkbox-custom"></span>
+                        <span>Include chat metadata</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn primary" onclick="doExport()">
+                    Export Now
+                </button>
+                <button class="modal-btn" onclick="closeExportModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="chatgen-script.js"></script>
+</body>
+</html>
