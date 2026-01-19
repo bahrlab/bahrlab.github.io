@@ -11,7 +11,7 @@ let chatState = {
     chatName: 'Chat'
 };
 
-// Навигация
+// Навигациям 
 function goHome() {
     window.location.href = "https://bahrlab.github.io";
 }
