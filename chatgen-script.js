@@ -11,7 +11,86 @@ let chatState = {
     chatName: 'Chat'
 };
 
-// Навигациям 
+// Инициализация - ВСЁ В ЭТОЙ ФУНКЦИИ
+function initApp() {
+    // Навигация
+    document.getElementById('homeLogo').addEventListener('click', goHome);
+    
+    // Главная страница
+    document.getElementById('quickGenerateBtn').addEventListener('click', quickGenerate);
+    document.getElementById('advancedSetupBtn').addEventListener('click', showAdvancedSetup);
+    
+    // Настройка
+    document.getElementById('addParticipantBtn').addEventListener('click', addParticipant);
+    document.getElementById('goBackBtn').addEventListener('click', goBack);
+    document.getElementById('startChatBtn').addEventListener('click', startChat);
+    
+    // Кнопки скорости
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            setSpeed(this.dataset.speed);
+        });
+    });
+    
+    // Чат
+    document.getElementById('pauseBtn').addEventListener('click', togglePause);
+    document.getElementById('addMessageBtn').addEventListener('click', addCustomMessage);
+    document.getElementById('regenerateBtn').addEventListener('click', regenerateLast);
+    document.getElementById('exportBtn').addEventListener('click', showExport);
+    document.getElementById('stopBtn').addEventListener('click', stopGeneration);
+    
+    // Кнопки добавления сообщений
+    document.querySelectorAll('.gen-btn').forEach(btn => {
+        if (!btn.id) { // Только кнопки с data-count
+            btn.addEventListener('click', function() {
+                const count = parseInt(this.dataset.count);
+                generateMore(count);
+            });
+        }
+    });
+    
+    // Модальные окна
+    document.getElementById('closeExportModal').addEventListener('click', closeModal);
+    document.getElementById('closeMessageModal').addEventListener('click', closeMessageModal);
+    document.getElementById('cancelMessageBtn').addEventListener('click', closeMessageModal);
+    document.getElementById('sendMessageBtn').addEventListener('click', sendCustomMessage);
+    
+    // Экспорт
+    document.getElementById('exportTxtBtn').addEventListener('click', exportAsTXT);
+    document.getElementById('exportHtmlBtn').addEventListener('click', exportAsHTML);
+    document.getElementById('copyChatBtn').addEventListener('click', copyChat);
+    
+    // Поиск по Enter
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            quickGenerate();
+        }
+    });
+    
+    // Загружаем примеры
+    loadExamples();
+    
+    // Устанавливаем начальных участников
+    if (chatState.participants.length === 0) {
+        chatState.participants = [
+            {
+                name: "Alex",
+                personality: "Friendly and talkative",
+                avatar: "A"
+            },
+            {
+                name: "Sam",
+                personality: "Reserved but thoughtful",
+                avatar: "S"
+            }
+        ];
+        renderParticipants();
+    }
+    
+    console.log("Chat Generator initialized!");
+}
+
+// Навигация
 function goHome() {
     window.location.href = "https://bahrlab.github.io";
 }
@@ -47,7 +126,7 @@ const examples = [
 function loadExamples() {
     const grid = document.getElementById('examplesGrid');
     grid.innerHTML = examples.map(example => `
-        <div class="example-card" onclick="loadExample('${example.scenario}', ${example.participants})">
+        <div class="example-card" data-scenario="${example.scenario}" data-participants="${example.participants}">
             <div class="example-title">${example.title}</div>
             <div class="example-desc">${example.desc}</div>
             <div class="example-meta">
@@ -56,6 +135,15 @@ function loadExamples() {
             </div>
         </div>
     `).join('');
+    
+    // Добавляем обработчики на карточки
+    document.querySelectorAll('.example-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const scenario = this.dataset.scenario;
+            const participantCount = parseInt(this.dataset.participants);
+            loadExample(scenario, participantCount);
+        });
+    });
 }
 
 function loadExample(scenario, participantCount) {
@@ -89,23 +177,7 @@ function loadExample(scenario, participantCount) {
 function showAdvancedSetup() {
     document.getElementById('mainPage').style.display = 'none';
     document.getElementById('setupPage').style.display = 'block';
-    
-    // Если участников нет, создаем двух по умолчанию
-    if (chatState.participants.length === 0) {
-        chatState.participants = [
-            {
-                name: "Alex",
-                personality: "Friendly and talkative",
-                avatar: "A"
-            },
-            {
-                name: "Sam",
-                personality: "Reserved but thoughtful",
-                avatar: "S"
-            }
-        ];
-        renderParticipants();
-    }
+    renderParticipants();
 }
 
 function goBack() {
@@ -113,6 +185,84 @@ function goBack() {
     document.getElementById('mainPage').style.display = 'block';
 }
 
+// Управление участниками
+function renderParticipants() {
+    const list = document.getElementById('participantsList');
+    list.innerHTML = '';
+    
+    chatState.participants.forEach((participant, index) => {
+        const item = document.createElement('div');
+        item.className = 'participant-item';
+        item.innerHTML = `
+            <div class="participant-avatar">${participant.avatar}</div>
+            <div class="participant-info">
+                <div class="participant-name">${participant.name}</div>
+                <div class="participant-desc">${participant.personality}</div>
+            </div>
+            <button class="remove-participant" data-index="${index}">×</button>
+        `;
+        list.appendChild(item);
+    });
+    
+    // Добавляем обработчики на кнопки удаления
+    document.querySelectorAll('.remove-participant').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index);
+            removeParticipant(index);
+        });
+    });
+}
+
+function addParticipant() {
+    if (chatState.participants.length >= 6) {
+        alert("Maximum 6 participants allowed!");
+        return;
+    }
+    
+    const name = prompt("Enter participant name:", `User${chatState.participants.length + 1}`);
+    if (!name || name.trim() === '') return;
+    
+    const personality = prompt("Describe their personality:", "Friendly conversationalist");
+    if (!personality) return;
+    
+    const newParticipant = {
+        name: name.trim(),
+        personality: personality.trim(),
+        avatar: name.trim().charAt(0).toUpperCase()
+    };
+    
+    chatState.participants.push(newParticipant);
+    renderParticipants();
+}
+
+function removeParticipant(index) {
+    if (chatState.participants.length <= 2) {
+        alert("You need at least 2 participants!");
+        return;
+    }
+    
+    if (confirm(`Remove ${chatState.participants[index].name}?`)) {
+        chatState.participants.splice(index, 1);
+        renderParticipants();
+    }
+}
+
+// Скорость генерации
+function setSpeed(speed) {
+    chatState.generationSpeed = speed;
+    
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Находим кнопку с нужной скоростью
+    const activeBtn = document.querySelector(`.speed-btn[data-speed="${speed}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+}
+
+// Запуск чата
 function startChat() {
     const scenario = document.getElementById('scenario').value.trim();
     if (!scenario) {
@@ -158,70 +308,6 @@ function startChat() {
     setTimeout(() => {
         startGeneration();
     }, 1000);
-}
-
-// Управление участниками
-function renderParticipants() {
-    const list = document.getElementById('participantsList');
-    list.innerHTML = '';
-    
-    chatState.participants.forEach((participant, index) => {
-        const item = document.createElement('div');
-        item.className = 'participant-item';
-        item.innerHTML = `
-            <div class="participant-avatar">${participant.avatar}</div>
-            <div class="participant-info">
-                <div class="participant-name">${participant.name}</div>
-                <div class="participant-desc">${participant.personality}</div>
-            </div>
-            <button class="remove-participant" onclick="removeParticipant(${index})">×</button>
-        `;
-        list.appendChild(item);
-    });
-}
-
-function addParticipant() {
-    if (chatState.participants.length >= 6) {
-        alert("Maximum 6 participants allowed!");
-        return;
-    }
-    
-    const name = prompt("Enter participant name:", `User${chatState.participants.length + 1}`);
-    if (!name || name.trim() === '') return;
-    
-    const personality = prompt("Describe their personality:", "Friendly conversationalist");
-    if (!personality) return;
-    
-    const newParticipant = {
-        name: name.trim(),
-        personality: personality.trim(),
-        avatar: name.trim().charAt(0).toUpperCase()
-    };
-    
-    chatState.participants.push(newParticipant);
-    renderParticipants();
-}
-
-function removeParticipant(index) {
-    if (chatState.participants.length <= 2) {
-        alert("You need at least 2 participants!");
-        return;
-    }
-    
-    if (confirm(`Remove ${chatState.participants[index].name}?`)) {
-        chatState.participants.splice(index, 1);
-        renderParticipants();
-    }
-}
-
-// Скорость генерации
-function setSpeed(speed) {
-    chatState.generationSpeed = speed;
-    
-    document.querySelectorAll('.speed-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
 }
 
 // Генерация чата
@@ -463,6 +549,7 @@ function stopGeneration() {
 function generateMore(count) {
     if (!chatState.isGenerating) {
         startGeneration();
+        return;
     }
     
     // Временно увеличиваем максимум
@@ -559,7 +646,7 @@ function sendCustomMessage() {
     const select = document.getElementById('messageParticipant');
     const participantIndex = parseInt(select.value);
     const text = document.getElementById('messageText').value.trim();
-    const addReaction = document.getElementById('addReaction').checked;
+    const addReaction = document.getElementById('addReactionCheck').checked;
     
     if (!text) {
         alert("Please enter message text!");
@@ -729,15 +816,5 @@ function quickGenerate() {
     renderParticipants();
 }
 
-// Инициализация
-window.onload = function() {
-    loadExamples();
-    document.getElementById('searchInput').focus();
-    
-    // Быстрая генерация по Enter
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            quickGenerate();
-        }
-    });
-};
+// Запускаем инициализацию когда страница загрузится
+window.addEventListener('DOMContentLoaded', initApp);
