@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAHR LAB - Storyline Editor</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="story-styles.css">
+</head>
+<body>
+    <div class="header">
+        <img src="https://raw.githubusercontent.com/bahrlab/bahrlab.github.io/refs/heads/main/files/images/BAHRLABLOGO.png" alt="BAHR LAB" class="logo" id="homeLogo">
+        <div class="header-controls">
+            <button class="header-btn" id="exportBtn" title="Export Story">
+                <span>📤</span>
+            </button>
+            <button class="header-btn" id="saveBtn" title="Save Story">
+                <span>💾</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Главная страница -->
+    <div id="mainPage">
+        <div class="main-content">
+            <h1 class="main-title">Storyline Editor</h1>
+            <p class="subtitle">Create branching narratives with AI-powered story generation</p>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="storyPrompt" placeholder="Start your story... (e.g., 'A man goes to drink coffee')" autocomplete="off">
+                <button class="search-button" id="startStoryBtn">Start New Story</button>
+            </div>
+            
+            <div class="quick-stories">
+                <h2 class="section-title">Quick Start Examples</h2>
+                <div class="stories-grid" id="storiesGrid">
+                    <div class="story-card" data-prompt="A detective investigates a mysterious disappearance">
+                        <div class="story-icon">🕵️</div>
+                        <div class="story-info">
+                            <div class="story-title">Mystery Investigation</div>
+                            <div class="story-desc">Detective story with clues and suspects</div>
+                        </div>
+                    </div>
+                    
+                    <div class="story-card" data-prompt="An astronaut discovers alien life on a distant planet">
+                        <div class="story-icon">🚀</div>
+                        <div class="story-info">
+                            <div class="story-title">Space Adventure</div>
+                            <div class="story-desc">Sci-fi exploration with unexpected encounters</div>
+                        </div>
+                    </div>
+                    
+                    <div class="story-card" data-prompt="A student finds a magical book in the library">
+                        <div class="story-icon">📚</div>
+                        <div class="story-info">
+                            <div class="story-title">Magical Discovery</div>
+                            <div class="story-desc">Fantasy story with magical elements</div>
+                        </div>
+                    </div>
+                    
+                    <div class="story-card" data-prompt="A chef competes in a high-stakes cooking competition">
+                        <div class="story-icon">👨‍🍳</div>
+                        <div class="story-info">
+                            <div class="story-title">Cooking Drama</div>
+                            <div class="story-desc">Competitive drama with culinary twists</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recent-stories" id="recentStories" style="display: none;">
+                <h2 class="section-title">Recent Stories</h2>
+                <div id="recentList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Редактор сюжета -->
+    <div id="editorPage" style="display: none;">
+        <div class="editor-container">
+            <!-- Панель управления -->
+            <div class="editor-controls">
+                <div class="story-info">
+                    <h2 id="storyTitle">Untitled Story</h2>
+                    <div class="story-stats">
+                        <span>Nodes: <span id="nodeCount">1</span></span>
+                        <span>Branches: <span id="branchCount">0</span></span>
+                        <span>Depth: <span id="depthCount">1</span></span>
+                    </div>
+                </div>
+                
+                <div class="control-buttons">
+                    <button class="control-btn" id="addNodeBtn">
+                        <span>➕</span> Add Node
+                    </button>
+                    <button class="control-btn" id="aiExpandBtn">
+                        <span>🤖</span> AI Expand
+                    </button>
+                    <button class="control-btn" id="randomWalkBtn">
+                        <span>🎲</span> Random Walk
+                    </button>
+                    <button class="control-btn" id="settingsBtn">
+                        <span>⚙️</span> Settings
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Область сюжета -->
+            <div class="story-area" id="storyArea">
+                <div class="timeline-container" id="timelineContainer">
+                    <!-- Timeline будет рендериться здесь -->
+                </div>
+                
+                <div class="empty-timeline" id="emptyTimeline">
+                    <div class="empty-icon">📖</div>
+                    <h3>No Story Started</h3>
+                    <p>Create a starting point or load an example</p>
+                </div>
+            </div>
+            
+            <!-- Панель деталей узла -->
+            <div class="node-details" id="nodeDetails">
+                <div class="details-header">
+                    <h3>Node Details</h3>
+                    <button class="close-details" id="closeDetailsBtn">×</button>
+                </div>
+                
+                <div class="details-content">
+                    <div class="input-group">
+                        <label>Event Description</label>
+                        <textarea id="nodeText" placeholder="Describe what happens in this story event..." rows="4"></textarea>
+                    </div>
+                    
+                    <div class="node-meta">
+                        <div class="meta-item">
+                            <label>Branch Style</label>
+                            <select id="branchStyle">
+                                <option value="realistic">Realistic</option>
+                                <option value="absurd">Absurd/Humorous</option>
+                                <option value="dramatic">Dramatic</option>
+                                <option value="tragic">Tragic</option>
+                                <option value="fantasy">Fantasy</option>
+                                <option value="scifi">Sci-Fi</option>
+                            </select>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <label>Consequences</label>
+                            <select id="consequenceType">
+                                <option value="neutral">Neutral</option>
+                                <option value="positive">Positive</option>
+                                <option value="negative">Negative</option>
+                                <option value="extreme">Extreme</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="node-actions">
+                        <button class="action-btn" id="generateBranchesBtn">
+                            <span>🌱</span> Generate Branches
+                        </button>
+                        <button class="action-btn secondary" id="addBranchBtn">
+                            <span>↪️</span> Add Manual Branch
+                        </button>
+                        <button class="action-btn danger" id="deleteNodeBtn">
+                            <span>🗑️</span> Delete Node
+                        </button>
+                    </div>
+                    
+                    <div class="branches-list" id="branchesList">
+                        <h4>Branches from this node:</h4>
+                        <!-- Список веток будет здесь -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Индикатор загрузки AI -->
+            <div class="ai-loading" id="aiLoading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">AI is thinking...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно настроек -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Story Settings</h3>
+                <button class="close-modal" id="closeSettingsBtn">×</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="settings-section">
+                    <h4>Global Story Style</h4>
+                    <select id="globalStyle" class="style-select">
+                        <option value="realistic">Realistic</option>
+                        <option value="absurd">Absurd & Humorous</option>
+                        <option value="dramatic">Dramatic & Intense</option>
+                        <option value="tragic">Tragic & Melodramatic</option>
+                        <option value="fantasy">Fantasy & Magical</option>
+                        <option value="scifi">Sci-Fi & Futuristic</option>
+                        <option value="surreal">Surreal & Dreamlike</option>
+                        <option value="noir">Noir & Mystery</option>
+                    </select>
+                </div>
+                
+                <div class="settings-section">
+                    <h4>Branching Settings</h4>
+                    <div class="setting-item">
+                        <label>Max branches per node:</label>
+                        <input type="range" id="maxBranches" min="1" max="5" value="3">
+                        <span id="branchesValue">3</span>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>AI Creativity:</label>
+                        <input type="range" id="aiCreativity" min="1" max="10" value="7">
+                        <div class="range-labels">
+                            <span>Predictable</span>
+                            <span>Creative</span>
+                            <span>Wild</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4>Visual Settings</h4>
+                    <div class="checkbox-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="showConnections" checked>
+                            <span>Show connection lines</span>
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="colorByType" checked>
+                            <span>Color nodes by type</span>
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="autoArrange">
+                            <span>Auto-arrange nodes</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4>Quick Actions</h4>
+                    <div class="quick-actions">
+                        <button class="quick-btn" id="exportJsonBtn">
+                            <span>🔧</span> Export JSON
+                        </button>
+                        <button class="quick-btn" id="importJsonBtn">
+                            <span>📁</span> Import JSON
+                        </button>
+                        <button class="quick-btn" id="clearStoryBtn">
+                            <span>🗑️</span> Clear Story
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn primary" id="applySettingsBtn">
+                    Apply Settings
+                </button>
+                <button class="modal-btn" id="cancelSettingsBtn">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно экспорта -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Export Story</h3>
+                <button class="close-modal" id="closeExportBtn">×</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="export-options">
+                    <div class="export-option active" data-format="text">
+                        <div class="export-icon">📄</div>
+                        <div class="export-info">
+                            <div class="export-title">Text Story</div>
+                            <div class="export-desc">Linear narrative text</div>
+                        </div>
+                    </div>
+                    
+                    <div class="export-option" data-format="tree">
+                        <div class="export-icon">🌳</div>
+                        <div class="export-info">
+                            <div class="export-title">Tree View</div>
+                            <div class="export-desc">Branching structure</div>
+                        </div>
+                    </div>
+                    
+                    <div class="export-option" data-format="json">
+                        <div class="export-icon">🔧</div>
+                        <div class="export-info">
+                            <div class="export-title">JSON Data</div>
+                            <div class="export-desc">Raw story data</div>
+                        </div>
+                    </div>
+                    
+                    <div class="export-option" data-format="image">
+                        <div class="export-icon">🖼️</div>
+                        <div class="export-info">
+                            <div class="export-title">Image</div>
+                            <div class="export-desc">Visual diagram</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="export-preview" id="exportPreview">
+                    <!-- Превью будет здесь -->
+                </div>
+                
+                <div class="export-stats">
+                    <div class="stat">
+                        <span class="stat-label">Total Nodes:</span>
+                        <span class="stat-value" id="exportNodeCount">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Total Branches:</span>
+                        <span class="stat-value" id="exportBranchCount">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Story Depth:</span>
+                        <span class="stat-value" id="exportDepthCount">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn primary" id="doExportBtn">
+                    Export Now
+                </button>
+                <button class="modal-btn" id="cancelExportBtn">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно случайного прохождения -->
+    <div class="modal-overlay" id="randomWalkModal">
+        <div class="modal wide-modal">
+            <div class="modal-header">
+                <h3>Random Story Walk</h3>
+                <button class="close-modal" id="closeWalkBtn">×</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="walk-controls">
+                    <div class="input-group">
+                        <label>Starting Node:</label>
+                        <select id="startNodeSelect">
+                            <!-- Заполнится через JS -->
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Max Steps:</label>
+                        <input type="range" id="walkSteps" min="1" max="20" value="10">
+                        <span id="stepsValue">10</span>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="includeDeadEnds" checked>
+                            <span>Include dead ends</span>
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="preferBranches">
+                            <span>Prefer branching paths</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="walk-preview" id="walkPreview">
+                    <h4>Path Preview:</h4>
+                    <div class="path-list" id="pathList">
+                        <!-- Путь будет отображаться здесь -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn" id="generateWalkBtn">
+                    <span>🎲</span> Generate Random Walk
+                </button>
+                <button class="modal-btn primary" id="exportWalkBtn">
+                    <span>📥</span> Export This Path
+                </button>
+                <button class="modal-btn" id="cancelWalkBtn">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="story-script.js"></script>
+</body>
+</html>
