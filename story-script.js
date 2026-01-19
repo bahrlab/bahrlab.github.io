@@ -1,4 +1,6 @@
+// story-script.js - Полный рабочий код редактора сюжетов
 const API_URL = "https://freeai.logise1123.workers.dev/";
+
 let storyState = {
     nodes: {},
     connections: [],
@@ -19,7 +21,9 @@ let storyState = {
     }
 };
 
-// Инициализация
+// Инициализация приложения
+document.addEventListener('DOMContentLoaded', initApp);
+
 function initApp() {
     // Навигация
     document.getElementById('homeLogo').addEventListener('click', goHome);
@@ -89,6 +93,15 @@ function initApp() {
         document.getElementById('stepsValue').textContent = this.value;
     });
     
+    // Нажатие на область истории закрывает детали
+    document.getElementById('storyArea').addEventListener('click', function(e) {
+        if (e.target === this || e.target.classList.contains('timeline-container')) {
+            storyState.selectedNodeId = null;
+            closeNodeDetails();
+            renderStory();
+        }
+    });
+    
     // Инициализация значений
     updateCreativityLabels(7);
     
@@ -96,6 +109,12 @@ function initApp() {
     loadRecentStories();
     
     console.log("Story Editor initialized!");
+}
+
+// Вспомогательные функции
+function truncateText(text, maxLength) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
 }
 
 // Навигация
@@ -190,7 +209,7 @@ function saveToRecent(prompt) {
         title: truncateText(prompt, 20),
         nodes: 1,
         date: new Date().toLocaleDateString(),
-        data: storyState
+        data: JSON.parse(JSON.stringify(storyState)) // Копируем данные
     };
     
     // Добавляем в начало и ограничиваем 5
@@ -201,8 +220,33 @@ function saveToRecent(prompt) {
 }
 
 function loadStory(storyId) {
-    // В реальном приложении здесь была бы загрузка полной истории
-    alert("Story loading would be implemented with full data storage");
+    const recent = JSON.parse(localStorage.getItem('recentStories') || '[]');
+    const story = recent.find(s => s.id === storyId);
+    
+    if (story && story.data) {
+        if (confirm("Load this story? Current story will be lost.")) {
+            // Восстанавливаем состояние
+            storyState = JSON.parse(JSON.stringify(story.data));
+            
+            // Переходим в редактор
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('editorPage').style.display = 'block';
+            
+            // Обновляем заголовок
+            document.getElementById('storyTitle').textContent = story.title || 'Loaded Story';
+            
+            // Рендерим историю
+            renderStory();
+            updateStats();
+            
+            if (Object.keys(storyState.nodes).length > 0) {
+                storyState.selectedNodeId = Object.keys(storyState.nodes)[0];
+                showNodeDetails(storyState.selectedNodeId);
+            }
+        }
+    } else {
+        alert("Story not found or corrupted");
+    }
 }
 
 // Создание узла
@@ -309,7 +353,7 @@ function makeDraggable(element, node) {
     let startX, startY, initialX, initialY;
     
     element.addEventListener('mousedown', startDrag);
-    element.addEventListener('touchstart', startDragTouch);
+    element.addEventListener('touchstart', startDragTouch, { passive: false });
     
     function startDrag(e) {
         e.preventDefault();
@@ -324,6 +368,7 @@ function makeDraggable(element, node) {
     }
     
     function startDragTouch(e) {
+        if (e.touches.length !== 1) return;
         e.preventDefault();
         isDragging = true;
         const touch = e.touches[0];
@@ -332,7 +377,7 @@ function makeDraggable(element, node) {
         initialX = node.x;
         initialY = node.y;
         
-        document.addEventListener('touchmove', dragTouch);
+        document.addEventListener('touchmove', dragTouch, { passive: false });
         document.addEventListener('touchend', stopDrag);
     }
     
@@ -351,12 +396,12 @@ function makeDraggable(element, node) {
         
         // Обновляем соединения
         if (storyState.settings.showConnections) {
-            renderStory();
+            renderConnections(document.getElementById('timelineContainer'));
         }
     }
     
     function dragTouch(e) {
-        if (!isDragging) return;
+        if (!isDragging || e.touches.length !== 1) return;
         e.preventDefault();
         
         const touch = e.touches[0];
@@ -370,7 +415,7 @@ function makeDraggable(element, node) {
         element.style.top = `${node.y}px`;
         
         if (storyState.settings.showConnections) {
-            renderStory();
+            renderConnections(document.getElementById('timelineContainer'));
         }
     }
     
@@ -384,6 +429,10 @@ function makeDraggable(element, node) {
 }
 
 function renderConnections(container) {
+    // Удаляем старые соединения
+    const oldConnections = container.querySelectorAll('.connection');
+    oldConnections.forEach(conn => conn.remove());
+    
     storyState.connections.forEach(conn => {
         const fromNode = storyState.nodes[conn.from];
         const toNode = storyState.nodes[conn.to];
@@ -393,34 +442,63 @@ function renderConnections(container) {
         // Создаем SVG для соединения
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.classList.add('connection');
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.overflow = 'visible';
         
-        // Устанавливаем размеры
-        const x1 = fromNode.x + 100;
+        // Рассчитываем позиции
+        const x1 = fromNode.x + 100; // центр узла
         const y1 = fromNode.y + 60;
         const x2 = toNode.x + 100;
         const y2 = toNode.y + 60;
         
-        // Рисуем линию
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const d = `M ${x1} ${y1} C ${x1 + 100} ${y1}, ${x2 - 100} ${y2}, ${x2} ${y2}`;
-        line.setAttribute('d', d);
-        line.classList.add('line', conn.type);
+        // Рисуем кривую Безье
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const controlOffset = 50;
+        const d = `M ${x1} ${y1} C ${x1 + controlOffset} ${y1}, ${x2 - controlOffset} ${y2}, ${x2} ${y2}`;
+        path.setAttribute('d', d);
+        path.classList.add('line', conn.type);
+        path.setAttribute('stroke', getConnectionColor(conn.type));
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('fill', 'none');
         
-        // Стрелка
-        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        arrow.setAttribute('points', '0,0 -5,-10 5,-10');
-        arrow.classList.add('arrow', conn.type);
-        arrow.setAttribute('transform', `translate(${x2},${y2}) rotate(${calcAngle(x1, y1, x2, y2)})`);
+        // Добавляем стрелку
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.setAttribute('id', `arrow-${conn.from}-${conn.to}`);
+        marker.setAttribute('markerWidth', '10');
+        marker.setAttribute('markerHeight', '10');
+        marker.setAttribute('refX', '9');
+        marker.setAttribute('refY', '3');
+        marker.setAttribute('orient', 'auto');
+        marker.setAttribute('markerUnits', 'strokeWidth');
         
-        svg.appendChild(line);
-        svg.appendChild(arrow);
+        const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        arrowPath.setAttribute('d', 'M0,0 L0,6 L9,3 z');
+        arrowPath.setAttribute('fill', getConnectionColor(conn.type));
+        
+        marker.appendChild(arrowPath);
+        svg.appendChild(marker);
+        
+        // Применяем маркер к линии
+        path.setAttribute('marker-end', `url(#arrow-${conn.from}-${conn.to})`);
+        svg.appendChild(path);
+        
         container.appendChild(svg);
     });
 }
 
-function calcAngle(x1, y1, x2, y2) {
-    const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-    return angle;
+function getConnectionColor(type) {
+    const colors = {
+        'positive': '#4CAF50',
+        'negative': '#f44336',
+        'neutral': '#607d8b',
+        'extreme': '#9c27b0'
+    };
+    return colors[type] || '#607d8b';
 }
 
 // Выбор узла
@@ -646,12 +724,18 @@ async function generateBranchesForNode() {
         updateStats();
         updateBranchesList(node);
         
+        alert(`Generated ${branches.length} new branches!`);
+        
     } catch (error) {
         console.error("Error generating branches:", error);
         alert("Failed to generate branches. Please try again.");
     } finally {
         showAILoading(false);
     }
+}
+
+async function aiExpandSelected() {
+    await generateBranchesForNode();
 }
 
 async function generateAIBranches(node, count) {
@@ -667,6 +751,8 @@ Creativity level: ${creativity}/10 (1=realistic, 10=crazy/imaginative)
 Generate ${count} distinct possibilities for what happens next. Each should be 1-2 sentences. Format each branch on a new line. Make them varied and interesting.`;
 
     try {
+        console.log("Sending AI request:", prompt);
+        
         const response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -676,13 +762,24 @@ Generate ${count} distinct possibilities for what happens next. Each should be 1
             })
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        const aiResponse = data?.choices?.[0]?.message?.content || "";
+        console.log("AI response:", data);
+        
+        const aiResponse = data?.choices?.[0]?.message?.content || data?.message?.content || "";
         
         // Парсим ответ
         const lines = aiResponse.split('\n')
             .map(line => line.trim())
-            .filter(line => line && !line.startsWith('Branch') && !line.match(/^\d+[\.\)]/))
+            .filter(line => line && 
+                   !line.startsWith('Branch') && 
+                   !line.match(/^\d+[\.\)]/) &&
+                   !line.includes('Here are') &&
+                   line.length > 10)
+            .map(line => line.replace(/^[-•*]\s*/, '')) // Убираем маркеры списка
             .slice(0, count);
         
         // Если AI не дал достаточно вариантов, создаем fallback
@@ -692,18 +789,35 @@ Generate ${count} distinct possibilities for what happens next. Each should be 1
                 "A new character enters the scene.",
                 "The situation becomes more complicated.",
                 "A surprising revelation occurs.",
-                "Events escalate dramatically."
+                "Events escalate dramatically.",
+                "An unexpected obstacle appears.",
+                "A decision must be made.",
+                "The stakes get higher.",
+                "Something unexpected is discovered.",
+                "A twist changes everything."
             ];
             
             while (lines.length < count) {
-                lines.push(fallbacks[lines.length % fallbacks.length]);
+                const randomFallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+                if (!lines.includes(randomFallback)) {
+                    lines.push(randomFallback);
+                }
             }
         }
         
         return lines;
         
     } catch (error) {
-        throw error;
+        console.error("AI generation error:", error);
+        
+        // Fallback варианты
+        return [
+            "The story takes an unexpected turn.",
+            "A new development occurs.",
+            "Things become more complicated.",
+            "A surprising event happens.",
+            "The situation escalates."
+        ].slice(0, count);
     }
 }
 
@@ -790,16 +904,16 @@ function calculateStoryDepth() {
         }
     };
     
-    // Начинаем с узлов без родителей (начальные узлы)
-    const parentNodes = new Set(Object.keys(storyState.nodes));
-    Object.values(storyState.nodes).forEach(node => {
-        node.branches.forEach(branchId => {
-            parentNodes.delete(branchId.toString());
-        });
+    // Находим начальные узлы (те, у которых нет входящих соединений)
+    const hasIncoming = new Set();
+    storyState.connections.forEach(conn => {
+        hasIncoming.add(conn.to);
     });
     
-    parentNodes.forEach(nodeId => {
-        calculateDepth(parseInt(nodeId), 1);
+    Object.keys(storyState.nodes).forEach(nodeId => {
+        if (!hasIncoming.has(parseInt(nodeId))) {
+            calculateDepth(parseInt(nodeId), 1);
+        }
     });
     
     return maxDepth;
@@ -850,9 +964,11 @@ function applySettings() {
 
 function updateCreativityLabels(value) {
     const labels = document.querySelectorAll('.range-labels span');
-    labels[0].style.fontWeight = value <= 3 ? 'bold' : 'normal';
-    labels[1].style.fontWeight = value > 3 && value <= 7 ? 'bold' : 'normal';
-    labels[2].style.fontWeight = value > 7 ? 'bold' : 'normal';
+    if (labels.length >= 3) {
+        labels[0].style.fontWeight = value <= 3 ? 'bold' : 'normal';
+        labels[1].style.fontWeight = value > 3 && value <= 7 ? 'bold' : 'normal';
+        labels[2].style.fontWeight = value > 7 ? 'bold' : 'normal';
+    }
 }
 
 // Экспорт
@@ -958,13 +1074,15 @@ function generateTextExport() {
     text += `Total Nodes: ${Object.keys(storyState.nodes).length}\n`;
     text += '='.repeat(50) + '\n\n';
     
-    // Находим начальные узлы
-    const parentNodes = new Set(Object.keys(storyState.nodes));
-    Object.values(storyState.nodes).forEach(node => {
-        node.branches.forEach(branchId => {
-            parentNodes.delete(branchId.toString());
-        });
+    // Находим начальные узлы (те, у которых нет входящих соединений)
+    const hasIncoming = new Set();
+    storyState.connections.forEach(conn => {
+        hasIncoming.add(conn.to);
     });
+    
+    const startNodes = Object.values(storyState.nodes).filter(node => 
+        !hasIncoming.has(node.id)
+    );
     
     // Рекурсивно генерируем текст
     const generateBranchText = (nodeId, depth = 0) => {
@@ -980,8 +1098,9 @@ function generateTextExport() {
         return branchText;
     };
     
-    parentNodes.forEach(nodeId => {
-        text += generateBranchText(parseInt(nodeId), 0) + '\n';
+    startNodes.forEach((node, index) => {
+        text += generateBranchText(node.id, 0);
+        if (index < startNodes.length - 1) text += '\n';
     });
     
     return text;
@@ -1019,16 +1138,18 @@ function generateTreeExport() {
     };
     
     // Находим начальные узлы
-    const parentNodes = new Set(Object.keys(storyState.nodes));
-    Object.values(storyState.nodes).forEach(node => {
-        node.branches.forEach(branchId => {
-            parentNodes.delete(branchId.toString());
-        });
+    const hasIncoming = new Set();
+    storyState.connections.forEach(conn => {
+        hasIncoming.add(conn.to);
     });
     
-    parentNodes.forEach((nodeId, index) => {
-        const isLast = index === parentNodes.size - 1;
-        buildTree(parseInt(nodeId), '', isLast);
+    const startNodes = Object.values(storyState.nodes).filter(node => 
+        !hasIncoming.has(node.id)
+    );
+    
+    startNodes.forEach((node, index) => {
+        const isLast = index === startNodes.length - 1;
+        buildTree(node.id, '', isLast);
         if (!isLast) tree += '\n';
     });
     
@@ -1074,20 +1195,33 @@ function importStoryJson() {
                 if (confirm("Load this story? Current story will be lost.")) {
                     storyState = data.story || data;
                     
+                    // Восстанавливаем nextNodeId
+                    if (storyState.nodes && Object.keys(storyState.nodes).length > 0) {
+                        const maxId = Math.max(...Object.keys(storyState.nodes).map(id => parseInt(id)));
+                        storyState.nextNodeId = maxId + 1;
+                    }
+                    
                     // Переходим в редактор
                     document.getElementById('mainPage').style.display = 'none';
                     document.getElementById('editorPage').style.display = 'block';
                     
                     // Обновляем заголовок
-                    document.getElementById('storyTitle').textContent = data.metadata?.title || 'Imported Story';
+                    document.getElementById('storyTitle').textContent = 
+                        data.metadata?.title || 'Imported Story';
                     
                     // Рендерим историю
                     renderStory();
                     updateStats();
                     
+                    if (Object.keys(storyState.nodes).length > 0) {
+                        storyState.selectedNodeId = Object.keys(storyState.nodes)[0];
+                        showNodeDetails(storyState.selectedNodeId);
+                    }
+                    
                     alert("Story imported successfully!");
                 }
             } catch (error) {
+                console.error("Import error:", error);
                 alert("Error importing story: Invalid file format");
             }
         };
@@ -1098,8 +1232,8 @@ function importStoryJson() {
 }
 
 function exportAsImage() {
-    alert("Image export would generate a visual diagram of your story");
-    // В реальном приложении здесь был бы код для создания скриншота
+    alert("Image export would generate a visual diagram of your story. This feature is coming soon!");
+    // В реальном приложении здесь был бы код для создания скриншота с помощью html2canvas
 }
 
 // Сохранение истории
@@ -1107,7 +1241,7 @@ function saveStory() {
     const storyData = {
         id: Date.now(),
         title: document.getElementById('storyTitle').textContent,
-        data: storyState,
+        data: JSON.parse(JSON.stringify(storyState)), // Глубокая копия
         timestamp: new Date().toISOString()
     };
     
@@ -1119,3 +1253,250 @@ function saveStory() {
     if (savedStories.length > 10) savedStories.shift();
     
     localStorage.setItem('savedStories', JSON.stringify(savedStories));
+    
+    // Сохраняем в недавние
+    saveToRecent(storyData.title);
+    
+    alert("Story saved successfully!");
+}
+
+// Очистка истории
+function clearStory() {
+    if (confirm("Clear the entire story? This cannot be undone.")) {
+        storyState.nodes = {};
+        storyState.connections = [];
+        storyState.selectedNodeId = null;
+        storyState.nextNodeId = 1;
+        
+        closeNodeDetails();
+        renderStory();
+        updateStats();
+        
+        // Возвращаем на главную
+        document.getElementById('editorPage').style.display = 'none';
+        document.getElementById('mainPage').style.display = 'block';
+        document.getElementById('storyPrompt').value = '';
+    }
+}
+
+// Случайное прохождение
+function showRandomWalkModal() {
+    if (Object.keys(storyState.nodes).length === 0) {
+        alert("Create a story first!");
+        return;
+    }
+    
+    // Заполняем список начальных узлов
+    const select = document.getElementById('startNodeSelect');
+    select.innerHTML = '';
+    
+    // Находим узлы, у которых нет входящих соединений (начальные)
+    const hasIncoming = new Set();
+    storyState.connections.forEach(conn => {
+        hasIncoming.add(conn.to);
+    });
+    
+    Object.values(storyState.nodes).forEach(node => {
+        if (!hasIncoming.has(node.id)) {
+            const option = document.createElement('option');
+            option.value = node.id;
+            option.textContent = `#${node.id}: ${truncateText(node.text, 40)}`;
+            select.appendChild(option);
+        }
+    });
+    
+    // Если нет начальных узлов, используем первый
+    if (select.children.length === 0) {
+        const firstNode = Object.values(storyState.nodes)[0];
+        const option = document.createElement('option');
+        option.value = firstNode.id;
+        option.textContent = `#${firstNode.id}: ${truncateText(firstNode.text, 40)}`;
+        select.appendChild(option);
+    }
+    
+    document.getElementById('randomWalkModal').style.display = 'flex';
+}
+
+function closeWalkModal() {
+    document.getElementById('randomWalkModal').style.display = 'none';
+}
+
+function generateRandomWalk() {
+    const startNodeId = parseInt(document.getElementById('startNodeSelect').value);
+    const maxSteps = parseInt(document.getElementById('walkSteps').value);
+    const includeDeadEnds = document.getElementById('includeDeadEnds').checked;
+    const preferBranches = document.getElementById('preferBranches').checked;
+    
+    const path = [];
+    let currentNodeId = startNodeId;
+    let steps = 0;
+    
+    while (steps < maxSteps && currentNodeId) {
+        const node = storyState.nodes[currentNodeId];
+        if (!node) break;
+        
+        path.push({
+            id: node.id,
+            text: node.text,
+            consequence: node.consequence
+        });
+        
+        // Выбираем следующую ветку
+        if (node.branches.length === 0) {
+            if (includeDeadEnds) {
+                // Достигли конца ветки
+                break;
+            } else {
+                // Возвращаемся назад или заканчиваем
+                break;
+            }
+        }
+        
+        // Выбираем следующую ветку
+        if (preferBranches && node.branches.length > 1) {
+            // Предпочитаем ветки с большим количеством дальнейших ветвлений
+            let bestBranch = node.branches[0];
+            let maxFutureBranches = 0;
+            
+            node.branches.forEach(branchId => {
+                const branchNode = storyState.nodes[branchId];
+                if (branchNode && branchNode.branches.length > maxFutureBranches) {
+                    maxFutureBranches = branchNode.branches.length;
+                    bestBranch = branchId;
+                }
+            });
+            
+            currentNodeId = bestBranch;
+        } else {
+            // Случайный выбор
+            const randomIndex = Math.floor(Math.random() * node.branches.length);
+            currentNodeId = node.branches[randomIndex];
+        }
+        
+        steps++;
+    }
+    
+    // Отображаем путь
+    displayRandomWalk(path);
+}
+
+function displayRandomWalk(path) {
+    const pathList = document.getElementById('pathList');
+    pathList.innerHTML = '';
+    
+    if (path.length === 0) {
+        pathList.innerHTML = '<p style="color: #666; font-style: italic;">No path generated</p>';
+        return;
+    }
+    
+    path.forEach((step, index) => {
+        const stepElement = document.createElement('div');
+        stepElement.className = 'path-step';
+        stepElement.innerHTML = `
+            <strong>Step ${index + 1} [${step.consequence}]</strong><br>
+            ${step.text}
+        `;
+        pathList.appendChild(stepElement);
+    });
+}
+
+function exportRandomWalk() {
+    const pathList = document.getElementById('pathList');
+    const steps = pathList.querySelectorAll('.path-step');
+    
+    if (steps.length === 0) {
+        alert("Generate a walk first!");
+        return;
+    }
+    
+    let text = `Random Story Walk\n`;
+    text += `Generated: ${new Date().toLocaleString()}\n`;
+    text += `Total Steps: ${steps.length}\n`;
+    text += '='.repeat(50) + '\n\n';
+    
+    steps.forEach((step, index) => {
+        const strong = step.querySelector('strong');
+        const content = step.textContent.replace(strong?.textContent || '', '').trim();
+        text += `${index + 1}. ${content}\n\n`;
+    });
+    
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `random_walk_${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Авто-расположение узлов
+function autoArrangeNodes() {
+    if (Object.keys(storyState.nodes).length === 0) return;
+    
+    const nodes = Object.values(storyState.nodes);
+    const levelMap = new Map();
+    
+    // Определяем уровни для каждого узла
+    const calculateLevel = (nodeId, visited = new Set()) => {
+        if (visited.has(nodeId)) return 0;
+        visited.add(nodeId);
+        
+        const node = storyState.nodes[nodeId];
+        if (!node) return 0;
+        
+        if (levelMap.has(nodeId)) {
+            return levelMap.get(nodeId);
+        }
+        
+        let maxChildLevel = 0;
+        node.branches.forEach(childId => {
+            const childLevel = calculateLevel(childId, visited);
+            maxChildLevel = Math.max(maxChildLevel, childLevel);
+        });
+        
+        const level = maxChildLevel + 1;
+        levelMap.set(nodeId, level);
+        return level;
+    };
+    
+    // Вычисляем уровни для всех узлов
+    nodes.forEach(node => {
+        if (!levelMap.has(node.id)) {
+            calculateLevel(node.id);
+        }
+    });
+    
+    // Группируем узлы по уровням
+    const levels = {};
+    levelMap.forEach((level, nodeId) => {
+        if (!levels[level]) levels[level] = [];
+        levels[level].push(nodeId);
+    });
+    
+    // Располагаем узлы
+    const maxLevel = Math.max(...Object.keys(levels).map(Number));
+    const startX = 100;
+    const startY = 100;
+    const xSpacing = 300;
+    const ySpacing = 150;
+    
+    for (let level = 1; level <= maxLevel; level++) {
+        const levelNodes = levels[level] || [];
+        const yBase = startY + (maxLevel - level) * ySpacing;
+        
+        levelNodes.forEach((nodeId, index) => {
+            const node = storyState.nodes[nodeId];
+            if (node) {
+                node.x = startX + (level - 1) * xSpacing;
+                node.y = yBase + (index - levelNodes.length / 2) * 100;
+            }
+        });
+    }
+    
+    renderStory();
+}
+
+// Инициализация при загрузке
+window.onload = initApp;
