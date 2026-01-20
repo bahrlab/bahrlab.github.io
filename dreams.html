@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAHR LAB - Dream Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dreams-styles.css">
+</head>
+<body>
+    <div class="header">
+        <img src="https://raw.githubusercontent.com/bahrlab/bahrlab.github.io/refs/heads/main/files/images/BAHRLABLOGO.png" alt="BAHR LAB" class="logo" id="homeLogo">
+    </div>
+    
+    <!-- Главная страница -->
+    <div id="mainPage">
+        <div class="main-content">
+            <h1 class="main-title">Dream Generator</h1>
+            <p class="subtitle">Explore the mysterious world of AI-generated dreams</p>
+            
+            <div class="dream-preview">
+                <div class="dream-image" id="dreamImage">
+                    <div class="image-placeholder">
+                        <span>🌌</span>
+                        <p>Your dream will appear here</p>
+                    </div>
+                </div>
+                
+                <div class="dream-quote">
+                    <p id="dreamQuote">"The dream is the small hidden door in the deepest and most intimate sanctum of the soul."</p>
+                    <p class="quote-author">— Carl Jung</p>
+                </div>
+            </div>
+            
+            <div class="quick-generate">
+                <button class="dream-button primary" id="quickDreamBtn">
+                    <span>✨</span> Generate Random Dream
+                </button>
+                <button class="dream-button" id="customizeBtn">
+                    <span>⚙️</span> Customize Dream
+                </button>
+            </div>
+            
+            <div class="dream-types">
+                <h2 class="section-title">Dream Types</h2>
+                <div class="type-grid" id="typeGrid">
+                    <!-- Типы снов будут загружены через JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Настройка сна -->
+    <div id="setupPage" style="display: none;">
+        <div class="main-content">
+            <h1 class="main-title">Customize Your Dream</h1>
+            <p class="subtitle">Adjust parameters to influence your dream experience</p>
+            
+            <div class="setup-container">
+                <div class="setup-section">
+                    <h2 class="section-title">🌙 Dream Type</h2>
+                    <div class="type-selector">
+                        <div class="type-option active" data-type="normal">
+                            <div class="type-icon">😴</div>
+                            <div class="type-info">
+                                <div class="type-name">Normal Dream</div>
+                                <div class="type-desc">Everyday dream experience</div>
+                            </div>
+                        </div>
+                        
+                        <div class="type-option" data-type="lucid">
+                            <div class="type-icon">👁️</div>
+                            <div class="type-info">
+                                <div class="type-name">Lucid Dream</div>
+                                <div class="type-desc">Aware you're dreaming</div>
+                            </div>
+                        </div>
+                        
+                        <div class="type-option" data-type="nightmare">
+                            <div class="type-icon">😱</div>
+                            <div class="type-info">
+                                <div class="type-name">Nightmare</div>
+                                <div class="type-desc">Frightening or disturbing</div>
+                            </div>
+                        </div>
+                        
+                        <div class="type-option" data-type="prophetic">
+                            <div class="type-icon">🔮</div>
+                            <div class="type-info">
+                                <div class="type-name">Prophetic Dream</div>
+                                <div class="type-desc">Symbolic or meaningful</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setup-section">
+                    <h2 class="section-title">⚡ Dream Intensity</h2>
+                    <div class="intensity-controls">
+                        <div class="intensity-slider">
+                            <div class="slider-labels">
+                                <span>Calm</span>
+                                <span>Moderate</span>
+                                <span>Intense</span>
+                            </div>
+                            <input type="range" min="1" max="10" value="5" class="slider" id="intensitySlider">
+                            <div class="slider-value">
+                                <span id="intensityValue">5/10</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setup-section">
+                    <h2 class="section-title">🎭 Emotional Tone</h2>
+                    <div class="emotion-grid">
+                        <div class="emotion-option" data-emotion="neutral">
+                            <div class="emotion-icon">😐</div>
+                            <div class="emotion-name">Neutral</div>
+                        </div>
+                        
+                        <div class="emotion-option active" data-emotion="curious">
+                            <div class="emotion-icon">🤔</div>
+                            <div class="emotion-name">Curious</div>
+                        </div>
+                        
+                        <div class="emotion-option" data-emotion="peaceful">
+                            <div class="emotion-icon">😌</div>
+                            <div class="emotion-name">Peaceful</div>
+                        </div>
+                        
+                        <div class="emotion-option" data-emotion="anxious">
+                            <div class="emotion-icon">😰</div>
+                            <div class="emotion-name">Anxious</div>
+                        </div>
+                        
+                        <div class="emotion-option" data-emotion="joyful">
+                            <div class="emotion-icon">😄</div>
+                            <div class="emotion-name">Joyful</div>
+                        </div>
+                        
+                        <div class="emotion-option" data-emotion="mysterious">
+                            <div class="emotion-icon">🕵️</div>
+                            <div class="emotion-name">Mysterious</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setup-section">
+                    <h2 class="section-title">🌍 Dream Setting</h2>
+                    <div class="setting-controls">
+                        <div class="setting-group">
+                            <label>Realism Level</label>
+                            <div class="realism-slider">
+                                <input type="range" min="1" max="10" value="6" class="slider" id="realismSlider">
+                                <div class="slider-labels">
+                                    <span>Fantasy</span>
+                                    <span>Mixed</span>
+                                    <span>Realistic</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label>Common Elements</label>
+                            <div class="elements-grid">
+                                <label class="element-checkbox">
+                                    <input type="checkbox" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span>Flying</span>
+                                </label>
+                                <label class="element-checkbox">
+                                    <input type="checkbox" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span>Water</span>
+                                </label>
+                                <label class="element-checkbox">
+                                    <input type="checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <span>Chase</span>
+                                </label>
+                                <label class="element-checkbox">
+                                    <input type="checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <span>Falling</span>
+                                </label>
+                                <label class="element-checkbox">
+                                    <input type="checkbox" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span>Strangers</span>
+                                </label>
+                                <label class="element-checkbox">
+                                    <input type="checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <span>Teeth</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-button secondary" id="backBtn">
+                        <span>←</span> Back
+                    </button>
+                    <button class="action-button primary" id="generateDreamBtn">
+                        <span>🌙</span> Generate Dream
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Результат сна -->
+    <div id="dreamPage" style="display: none;">
+        <div class="dream-container">
+            <div class="dream-header">
+                <h2 id="dreamTitle">Dream Title</h2>
+                <div class="dream-meta">
+                    <span class="meta-item" id="dreamType">Normal Dream</span>
+                    <span class="meta-item" id="dreamIntensity">Intensity: 5/10</span>
+                    <span class="meta-item" id="dreamTime">Just now</span>
+                </div>
+            </div>
+            
+            <div class="dream-content">
+                <div class="dream-scene" id="dreamScene">
+                    <!-- Сцена сна будет здесь -->
+                </div>
+                
+                <div class="dream-symbols">
+                    <h3>🎭 Symbolic Elements</h3>
+                    <div class="symbols-grid" id="symbolsGrid">
+                        <!-- Символы будут добавлены через JS -->
+                    </div>
+                </div>
+                
+                <div class="dream-interpretation">
+                    <h3>💭 Dream Interpretation</h3>
+                    <div class="interpretation-text" id="interpretationText">
+                        <!-- Интерпретация будет здесь -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dream-actions">
+                <button class="dream-action-btn" id="saveDreamBtn">
+                    <span>💾</span> Save Dream
+                </button>
+                <button class="dream-action-btn" id="regenerateBtn">
+                    <span>🔄</span> Generate Another
+                </button>
+                <button class="dream-action-btn" id="shareDreamBtn">
+                    <span>📤</span> Share
+                </button>
+                <button class="dream-action-btn secondary" id="newDreamBtn">
+                    <span>✨</span> New Dream
+                </button>
+            </div>
+            
+            <div class="dream-history">
+                <h3>📜 Recent Dreams</h3>
+                <div class="history-list" id="historyList">
+                    <!-- История снов будет здесь -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно сохранения -->
+    <div class="modal-overlay" id="saveModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Save Dream</h3>
+                <button class="close-modal" id="closeSaveModal">×</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="input-group">
+                    <label>Dream Title</label>
+                    <input type="text" id="dreamSaveTitle" placeholder="Enter a title for this dream...">
+                </div>
+                
+                <div class="input-group">
+                    <label>Notes (optional)</label>
+                    <textarea id="dreamNotes" placeholder="Add your thoughts or feelings about this dream..." rows="3"></textarea>
+                </div>
+                
+                <div class="checkbox-group">
+                    <label class="checkbox">
+                        <input type="checkbox" id="includeImage" checked>
+                        <span>Include dream visualization</span>
+                    </label>
+                    <label class="checkbox">
+                        <input type="checkbox" id="includeInterpretation" checked>
+                        <span>Include interpretation</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn secondary" id="cancelSaveBtn">
+                    Cancel
+                </button>
+                <button class="modal-btn primary" id="confirmSaveBtn">
+                    Save Dream
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dreams-script.js"></script>
+</body>
+</html>
