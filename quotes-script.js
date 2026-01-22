@@ -238,7 +238,7 @@ function createGenerationPrompt(theme, length) {
     }[settings.style] || 'inspirational';
     
     const authorPart = settings.authorMode === 'ai' 
-        ? 'Generate a fitting author name that matches the quote.' 
+        ? 'Generate a fitting author name that matches the quote. ' 
         : 'Use the author name provided by the user.';
     
     return `Create a ${lengthText} ${styleText} quote about ${theme} in ${languageNames[settings.language]}.
