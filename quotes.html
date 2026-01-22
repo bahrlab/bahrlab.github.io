@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAHR LAB - AI Quote Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="quotes-styles.css">
+</head>
+<body>
+    <div class="header">
+        <img src="https://raw.githubusercontent.com/bahrlab/bahrlab.github.io/refs/heads/main/files/images/BAHRLABLOGO.png" alt="BAHR LAB" class="logo" onclick="goHome()">
+        <div class="header-controls">
+            <button class="header-btn" onclick="saveToFavorites()" title="Save to Favorites">
+                <span>⭐</span>
+            </button>
+            <button class="header-btn" onclick="viewFavorites()" title="View Favorites">
+                <span>📚</span>
+            </button>
+            <button class="header-btn" onclick="openExportModal()" title="Export Quote">
+                <span>📤</span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <h1 class="main-title">AI Quote Generator</h1>
+        <p class="subtitle">Create beautiful, meaningful quotes with artificial intelligence</p>
+        
+        <div class="generator-container">
+            <!-- Панель настроек -->
+            <div class="settings-panel">
+                <div class="settings-section">
+                    <h3 class="section-title">🔧 Generation Settings</h3>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">🎭 Theme / Topic</label>
+                        <div class="themes-grid" id="themesGrid">
+                            <!-- Теми будут загружены через JS -->
+                        </div>
+                        <input type="text" class="setting-input" id="customTheme" placeholder="Or enter custom topic...">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">🌐 Language</label>
+                        <div class="language-selector">
+                            <button class="lang-option active" data-lang="en" onclick="setLanguage('en')">
+                                <span class="lang-flag">🇺🇸</span> English
+                            </button>
+                            <button class="lang-option" data-lang="ru" onclick="setLanguage('ru')">
+                                <span class="lang-flag">🇷🇺</span> Русский
+                            </button>
+                            <button class="lang-option" data-lang="es" onclick="setLanguage('es')">
+                                <span class="lang-flag">🇪🇸</span> Español
+                            </button>
+                            <button class="lang-option" data-lang="fr" onclick="setLanguage('fr')">
+                                <span class="lang-flag">🇫🇷</span> Français
+                            </button>
+                            <button class="lang-option" data-lang="de" onclick="setLanguage('de')">
+                                <span class="lang-flag">🇩🇪</span> Deutsch
+                            </button>
+                            <button class="lang-option" data-lang="zh" onclick="setLanguage('zh')">
+                                <span class="lang-flag">🇨🇳</span> 中文
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">📝 Style</label>
+                        <div class="style-options">
+                            <button class="style-option active" data-style="inspirational" onclick="setStyle('inspirational')">
+                                <span>🌟</span> Inspirational
+                            </button>
+                            <button class="style-option" data-style="philosophical" onclick="setStyle('philosophical')">
+                                <span>🤔</span> Philosophical
+                            </button>
+                            <button class="style-option" data-style="humorous" onclick="setStyle('humorous')">
+                                <span>😄</span> Humorous
+                            </button>
+                            <button class="style-option" data-style="poetic" onclick="setStyle('poetic')">
+                                <span>🎨</span> Poetic
+                            </button>
+                            <button class="style-option" data-style="minimalist" onclick="setStyle('minimalist')">
+                                <span>⚫</span> Minimalist
+                            </button>
+                            <button class="style-option" data-style="deep" onclick="setStyle('deep')">
+                                <span>🌀</span> Deep
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">📏 Length</label>
+                        <div class="length-control">
+                            <input type="range" min="1" max="5" value="3" class="range-slider" id="lengthSlider">
+                            <div class="length-labels">
+                                <span>Short</span>
+                                <span>Medium</span>
+                                <span>Long</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">✍️ Author</label>
+                        <div class="author-controls">
+                            <div class="author-option">
+                                <input type="radio" id="authorAI" name="author" value="ai" checked onclick="setAuthorMode('ai')">
+                                <label for="authorAI">AI Generated Author</label>
+                            </div>
+                            <div class="author-option">
+                                <input type="radio" id="authorCustom" name="author" value="custom" onclick="setAuthorMode('custom')">
+                                <label for="authorCustom">Custom Author</label>
+                            </div>
+                            <input type="text" class="setting-input" id="customAuthor" placeholder="Enter author name..." style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">🎨 Design</label>
+                        <div class="design-options">
+                            <button class="design-option active" data-design="classic" onclick="setDesign('classic')">
+                                <div class="design-preview classic"></div>
+                                <span>Classic</span>
+                            </button>
+                            <button class="design-option" data-design="modern" onclick="setDesign('modern')">
+                                <div class="design-preview modern"></div>
+                                <span>Modern</span>
+                            </button>
+                            <button class="design-option" data-design="elegant" onclick="setDesign('elegant')">
+                                <div class="design-preview elegant"></div>
+                                <span>Elegant</span>
+                            </button>
+                            <button class="design-option" data-design="bold" onclick="setDesign('bold')">
+                                <div class="design-preview bold"></div>
+                                <span>Bold</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">🎨 Colors</label>
+                        <div class="color-picker">
+                            <input type="color" id="textColor" value="#000000" title="Text Color">
+                            <input type="color" id="bgColor" value="#ffffff" title="Background Color">
+                            <input type="color" id="accentColor" value="#4a6fa5" title="Accent Color">
+                            <button class="color-reset" onclick="resetColors()">Reset</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-section">
+                    <button class="generate-btn" onclick="generateQuote()">
+                        <span>✨</span> Generate Quote
+                    </button>
+                    <button class="generate-btn secondary" onclick="generateMultiple()">
+                        <span>🔄</span> Generate 5 Quotes
+                    </button>
+                    <button class="generate-btn tertiary" onclick="regenerateQuote()" id="regenerateBtn" disabled>
+                        <span>🎲</span> Regenerate
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Превью цитаты -->
+            <div class="quote-preview-container">
+                <div class="preview-header">
+                    <h3>📜 Quote Preview</h3>
+                    <div class="preview-controls">
+                        <button class="preview-control" onclick="editQuote()" title="Edit Quote">
+                            <span>✏️</span>
+                        </button>
+                        <button class="preview-control" onclick="copyQuote()" title="Copy Text">
+                            <span>📋</span>
+                        </button>
+                        <button class="preview-control" onclick="shareQuote()" title="Share">
+                            <span>🔗</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="quote-display" id="quoteDisplay">
+                    <div class="quote-placeholder">
+                        <div class="placeholder-icon">💭</div>
+                        <div class="placeholder-text">Your AI-generated quote will appear here</div>
+                        <div class="placeholder-hint">Configure settings and click "Generate Quote"</div>
+                    </div>
+                </div>
+                
+                <div class="quote-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Length:</span>
+                        <span class="stat-value" id="quoteLength">0 words</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Generated:</span>
+                        <span class="stat-value" id="quoteCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Favorites:</span>
+                        <span class="stat-value" id="favoriteCount">0</span>
+                    </div>
+                </div>
+                
+                <div class="generation-info" id="generationInfo">
+                    <!-- Информация о генерации будет здесь -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- История цитат -->
+        <div class="history-section" id="historySection" style="display: none;">
+            <h3 class="section-title">📜 Recent Quotes</h3>
+            <div class="quotes-history" id="quotesHistory">
+                <!-- История будет загружена через JS -->
+            </div>
+        </div>
+        
+        <!-- Множественные цитаты -->
+        <div class="multiple-quotes-section" id="multipleQuotesSection" style="display: none;">
+            <h3 class="section-title">🎭 Multiple Quotes</h3>
+            <div class="multiple-quotes-grid" id="multipleQuotesGrid">
+                <!-- Множественные цитаты будут здесь -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно редактирования -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">✏️ Edit Quote</h3>
+                <button class="close-modal" onclick="closeEditModal()">×</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="edit-group">
+                    <label>Quote Text:</label>
+                    <textarea class="edit-textarea" id="editQuoteText" rows="4"></textarea>
+                </div>
+                
+                <div class="edit-group">
+                    <label>Author:</label>
+                    <input type="text" class="edit-input" id="editQuoteAuthor">
+                </div>
+                
+                <div class="edit-group">
+                    <label>Style Adjustments:</label>
+                    <select class="edit-select" id="editQuoteStyle">
+                        <option value="none">No change</option>
+                        <option value="more_poetic">Make more poetic</option>
+                        <option value="more_concise">Make more concise</option>
+                        <option value="more_formal">Make more formal</option>
+                        <option value="more_casual">Make more casual</option>
+                        <option value="more_profound">Make more profound</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn primary" onclick="saveEditedQuote()">
+                    Save Changes
+                </button>
+                <button class="modal-btn" onclick="closeEditModal()">
+                    Cancel
+                </button>
+                <button class="modal-btn secondary" onclick="aiEnhanceQuote()">
+                    ✨ AI Enhance
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно избранного -->
+    <div class="modal-overlay" id="favoritesModal">
+        <div class="modal wide-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">⭐ Favorite Quotes</h3>
+                <button class="close-modal" onclick="closeFavoritesModal()">×</button>
+            </div>
+            
+            <div class="modal-content">
+                <div id="favoritesList" class="favorites-list">
+                    <!-- Избранные цитаты будут здесь -->
+                </div>
+                
+                <div class="favorites-actions" id="favoritesActions" style="display: none;">
+                    <button class="modal-btn" onclick="clearFavorites()">
+                        🗑️ Clear All
+                    </button>
+                    <button class="modal-btn primary" onclick="exportFavorites()">
+                        📤 Export All
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn" onclick="closeFavoritesModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно экспорта -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">📤 Export Quote</h3>
+                <button class="close-modal" onclick="closeExportModal()">×</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="export-options">
+                    <div class="export-section">
+                        <h4>📝 Text Formats</h4>
+                        <button class="export-option" onclick="exportAsText('txt')">
+                            <span class="export-icon">📄</span>
+                            <div class="export-info">
+                                <div class="export-title">Plain Text (.txt)</div>
+                                <div class="export-desc">Simple text file</div>
+                            </div>
+                        </button>
+                        
+                        <button class="export-option" onclick="exportAsText('json')">
+                            <span class="export-icon">🔤</span>
+                            <div class="export-info">
+                                <div class="export-title">JSON Format</div>
+                                <div class="export-desc">With metadata</div>
+                            </div>
+                        </button>
+                        
+                        <button class="export-option" onclick="exportAsText('html')">
+                            <span class="export-icon">🌐</span>
+                            <div class="export-info">
+                                <div class="export-title">HTML File</div>
+                                <div class="export-desc">Formatted webpage</div>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="export-section">
+                        <h4>🖼️ Image Formats</h4>
+                        <button class="export-option" onclick="exportAsImage('png')">
+                            <span class="export-icon">🖼️</span>
+                            <div class="export-info">
+                                <div class="export-title">PNG Image</div>
+                                <div class="export-desc">High quality</div>
+                            </div>
+                        </button>
+                        
+                        <button class="export-option" onclick="exportAsImage('jpg')">
+                            <span class="export-icon">📷</span>
+                            <div class="export-info">
+                                <div class="export-title">JPEG Image</div>
+                                <div class="export-desc">Compressed</div>
+                            </div>
+                        </button>
+                        
+                        <button class="export-option" onclick="exportAsImage('svg')">
+                            <span class="export-icon">🔶</span>
+                            <div class="export-info">
+                                <div class="export-title">SVG Vector</div>
+                                <div class="export-desc">Scalable</div>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="export-section">
+                        <h4>📱 Share</h4>
+                        <button class="export-option" onclick="shareOnTwitter()">
+                            <span class="export-icon">🐦</span>
+                            <div class="export-info">
+                                <div class="export-title">Twitter</div>
+                                <div class="export-desc">Share on X/Twitter</div>
+                            </div>
+                        </button>
+                        
+                        <button class="export-option" onclick="copyQuoteImage()">
+                            <span class="export-icon">📋</span>
+                            <div class="export-info">
+                                <div class="export-title">Copy Image</div>
+                                <div class="export-desc">To clipboard</div>
+                            </div>
+                        </button>
+                        
+                        <button class="export-option" onclick="downloadSocialImage()">
+                            <span class="export-icon">📱</span>
+                            <div class="export-info">
+                                <div class="export-title">Social Media</div>
+                                <div class="export-desc">Optimized for social</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="export-preview" id="exportPreview">
+                    <!-- Превью экспорта будет здесь -->
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn" onclick="closeExportModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Индикатор генерации -->
+    <div class="generation-indicator" id="generationIndicator">
+        <div class="indicator-content">
+            <div class="loading-spinner"></div>
+            <div class="indicator-text" id="indicatorText">Generating quote...</div>
+        </div>
+    </div>
+    
+    <!-- Canvas для генерации изображений (скрытый) -->
+    <canvas id="quoteCanvas" style="display: none;"></canvas>
+
+    <script src="quotes-script.js"></script>
+</body>
+</html>
