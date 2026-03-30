@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TeleTok · Game Jolt Mini App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Telegram Theme Variables */
+        :root {
+            --tg-bg-color: var(--tg-theme-bg-color, #000000);
+            --tg-text-color: var(--tg-theme-text-color, #ffffff);
+            --tg-hint-color: var(--tg-theme-hint-color, #aaaaaa);
+            --tg-link-color: var(--tg-theme-link-color, #6c9ee7);
+            --tg-button-color: var(--tg-theme-button-color, #3f8ef0);
+            --tg-button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --tg-secondary-bg-color: var(--tg-theme-secondary-bg-color, #1f1f1f);
+            --tg-header-bg-color: var(--tg-theme-header-bg-color, #000000);
+            --tg-accent-text-color: var(--tg-theme-accent-text-color, #3f8ef0);
+            --tg-section-separator-color: var(--tg-theme-section-separator-color, #2c2c2c);
+            --tg-destructive-text-color: var(--tg-theme-destructive-text-color, #ff5c5c);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--tg-bg-color);
+            color: var(--tg-text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: pan-y;
+        }
+
+        .tiktok-app {
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--tg-bg-color);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: var(--tg-header-bg-color);
+            border-bottom: 1px solid var(--tg-section-separator-color);
+            z-index: 20;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            gap: 24px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .tab {
+            opacity: 0.6;
+            transition: 0.2s;
+            cursor: pointer;
+            padding-bottom: 4px;
+            color: var(--tg-text-color);
+        }
+
+        .tab.active {
+            opacity: 1;
+            font-weight: 600;
+            border-bottom: 2px solid var(--tg-button-color);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 20px;
+            font-size: 20px;
+            color: var(--tg-hint-color);
+        }
+
+        .header-right i {
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .header-right i:active {
+            transform: scale(0.92);
+        }
+
+        .pages-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            scroll-behavior: smooth;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .feed-container {
+            height: 100%;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            background-color: var(--tg-bg-color);
+        }
+
+        .feed-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .video-card {
+            height: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px;
+            color: white;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .bg-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: auto;
+            z-index: 0;
+        }
+
+        .video-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .video-info {
+            position: relative;
+            z-index: 2;
+            max-width: 70%;
+            pointer-events: none;
+            margin-bottom: 40px;
+        }
+
+        .user-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--tg-button-color);
+            object-fit: cover;
+            background: var(--tg-secondary-bg-color);
+        }
+
+        .username {
+            font-weight: 700;
+            font-size: 16px;
+            text-shadow: 0 1px 2px black;
+        }
+
+        .verified {
+            color: var(--tg-button-color);
+            font-size: 14px;
+        }
+
+        .caption {
+            font-size: 14px;
+            line-height: 1.3;
+            margin-bottom: 8px;
+            text-shadow: 0 1px 2px black;
+        }
+
+        .music-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .action-bar {
+            position: absolute;
+            right: 16px;
+            bottom: 100px;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            pointer-events: auto;
+        }
+
+        .action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .action-item i {
+            font-size: 32px;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .action-item i:active {
+            transform: scale(1.15);
+        }
+
+        .action-item .count {
+            font-size: 12px;
+            font-weight: 600;
+            text-shadow: 0 1px 3px black;
+        }
+
+        .action-item .fa-heart.liked {
+            font-weight: 900;
+            color: var(--tg-destructive-text-color);
+        }
+
+        .action-item .fa-bookmark.saved {
+            font-weight: 900;
+            color: #ffc107;
+        }
+
+        .heart-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            color: var(--tg-destructive-text-color);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .heart-overlay.show {
+            animation: heartPop 0.5s ease;
+        }
+
+        @keyframes heartPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+        }
+
+        .loading-spinner {
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--tg-hint-color);
+            font-size: 14px;
+            gap: 8px;
+            background: var(--tg-bg-color);
+            scroll-snap-align: start;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--tg-section-separator-color);
+            border-top: 3px solid var(--tg-button-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 16px 14px;
+            background-color: var(--tg-header-bg-color);
+            border-top: 1px solid var(--tg-section-separator-color);
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: var(--tg-hint-color);
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-item i {
+            font-size: 22px;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active {
+            color: var(--tg-button-color);
+        }
+
+        .nav-item .label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .plus-button {
+            background-color: var(--tg-button-color);
+            color: var(--tg-button-text-color);
+            width: 44px;
+            height: 30px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            box-shadow: none;
+        }
+
+        .live-badge {
+            background: var(--tg-destructive-text-color);
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: bold;
+            margin-left: 6px;
+        }
+
+        .profile-header {
+            padding: 20px 16px;
+            background: var(--tg-secondary-bg-color);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border-bottom: 1px solid var(--tg-section-separator-color);
+        }
+
+        .profile-top {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--tg-button-color);
+            object-fit: cover;
+            background: var(--tg-bg-color);
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 28px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--tg-text-color);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--tg-hint-color);
+        }
+
+        .profile-bio {
+            font-size: 14px;
+            color: var(--tg-text-color);
+        }
+
+        .follow-btn {
+            background: var(--tg-button-color);
+            border: none;
+            border-radius: 30px;
+            padding: 12px;
+            color: var(--tg-button-text-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .follow-btn.following {
+            background: var(--tg-secondary-bg-color);
+            color: var(--tg-text-color);
+            border: 1px solid var(--tg-section-separator-color);
+        }
+
+        .follow-btn:active {
+            transform: scale(0.96);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            background: var(--tg-bg-color);
+        }
+
+        .grid-video {
+            aspect-ratio: 9/16;
+            background: var(--tg-secondary-bg-color);
+            object-fit: cover;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .upload-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--tg-section-separator-color);
+            border-radius: 28px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            background: var(--tg-secondary-bg-color);
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: var(--tg-hint-color);
+        }
+
+        .upload-input {
+            background: var(--tg-secondary-bg-color);
+            border: 1px solid var(--tg-section-separator-color);
+            border-radius: 16px;
+            padding: 14px;
+            color: var(--tg-text-color);
+            font-size: 16px;
+        }
+
+        .upload-progress {
+            text-align: center;
+            padding: 10px;
+            background: var(--tg-secondary-bg-color);
+            border-radius: 12px;
+            display: none;
+        }
+
+        .upload-progress.active {
+            display: block;
+        }
+
+        .comment-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .comment-modal.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .comment-sheet {
+            background: var(--tg-secondary-bg-color);
+            width: 100%;
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
+            padding: 20px;
+            color: var(--tg-text-color);
+            transform: translateY(100%);
+            transition: 0.2s;
+            max-height: 65%;
+            overflow-y: auto;
+        }
+
+        .comment-modal.show .comment-sheet {
+            transform: translateY(0);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-comments {
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--tg-hint-color);
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--tg-button-color);
+            flex-shrink: 0;
+        }
+
+        .comment-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: var(--tg-hint-color);
+        }
+
+        .comment-input-area {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .comment-input {
+            flex: 1;
+            background: var(--tg-bg-color);
+            border: 1px solid var(--tg-section-separator-color);
+            border-radius: 28px;
+            padding: 12px 18px;
+            color: var(--tg-text-color);
+            font-size: 14px;
+        }
+
+        .comment-send {
+            background: var(--tg-button-color);
+            border: none;
+            border-radius: 28px;
+            padding: 0 20px;
+            color: var(--tg-button-text-color);
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="tiktok-app">
+        <div class="header">
+            <div class="header-left">
+                <span class="tab active" data-tab="home">Для вас</span>
+                <span class="tab" data-tab="friends">Подписки</span>
+            </div>
+            <div class="header-right">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <i class="fa-regular fa-circle-check"></i>
+            </div>
+        </div>
+
+        <div class="pages-container">
+            <div class="page active" id="page-feed">
+                <div class="feed-container" id="feedContainer"></div>
+            </div>
+            <div class="page" id="page-profile">
+                <div id="profileContent"></div>
+            </div>
+            <div class="page" id="page-upload">
+                <div class="upload-container">
+                    <h2>Новое видео</h2>
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fa-solid fa-cloud-upload-alt"></i>
+                        <p>Выберите видео</p>
+                    </div>
+                    <div class="upload-progress" id="uploadProgress">
+                        <div class="spinner"></div>
+                        <p>Загрузка видео на сервер...</p>
+                    </div>
+                    <input type="file" id="videoFile" accept="video/*" style="display:none">
+                    <input type="text" class="upload-input" id="videoCaption" placeholder="Описание...">
+                    <input type="text" class="upload-input" id="videoMusic" placeholder="Музыка">
+                    <button class="follow-btn" id="publishBtn">Опубликовать</button>
+                </div>
+            </div>
+            <div class="page" id="page-discover">
+                <div style="padding:20px;color:var(--tg-hint-color);text-align:center;">Рекомендации и поиск</div>
+            </div>
+            <div class="page" id="page-inbox">
+                <div style="padding:20px;color:var(--tg-hint-color);text-align:center;">Уведомления</div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" data-page="feed"><i class="fa-solid fa-house"></i><span class="label">Главная</span></div>
+            <div class="nav-item" data-page="discover"><i class="fa-solid fa-compass"></i><span class="label">Открыть</span></div>
+            <div class="nav-item plus-button" data-page="upload"><i class="fa-solid fa-plus"></i></div>
+            <div class="nav-item" data-page="inbox"><i class="fa-regular fa-envelope"></i><span class="label">Сообщения</span></div>
+            <div class="nav-item" data-page="profile" id="navProfile"><i class="fa-regular fa-user"></i><span class="label">Профиль</span></div>
+        </div>
+    </div>
+
+    <div class="comment-modal" id="commentModal">
+        <div class="comment-sheet">
+            <div class="comment-header">
+                <h3>Комментарии (<span id="commentCountSpan">0</span>)</h3>
+                <span class="close-comments" id="closeComments">&times;</span>
+            </div>
+            <div class="comment-list" id="commentList"></div>
+            <div class="comment-input-area">
+                <input type="text" class="comment-input" placeholder="Написать комментарий..." id="commentInput">
+                <button class="comment-send" id="sendComment">→</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        (function() {
+            // Game Jolt API Configuration
+            const GAME_ID = 1059240;
+            const PRIVATE_KEY = "7fc4e6f9e8966f0c40bebd4dbe3f6322";
+            const API_BASE = "https://api.gamejolt.com/api/game/v1_2";
+            const YYF_URL = 'https://yyf.mubilop.com';
+            
+            // MD5 Implementation
+            function md5(string) {
+                function rotateLeft(lValue, iShiftBits) {
+                    return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
+                }
+                function addUnsigned(lX, lY) {
+                    let lX4, lY4, lX8, lY8, lResult;
+                    lX8 = (lX & 0x80000000);
+                    lY8 = (lY & 0x80000000);
+                    lX4 = (lX & 0x40000000);
+                    lY4 = (lY & 0x40000000);
+                    lResult = (lX & 0x3FFFFFFF) + (lY & 0x3FFFFFFF);
+                    if (lX4 & lY4) return (lResult ^ 0x80000000 ^ lX8 ^ lY8);
+                    if (lX4 | lY4) {
+                        if (lResult & 0x40000000) return (lResult ^ 0xC0000000 ^ lX8 ^ lY8);
+                        else return (lResult ^ 0x40000000 ^ lX8 ^ lY8);
+                    } else return (lResult ^ lX8 ^ lY8);
+                }
+                function F(x, y, z) { return (x & y) | ((~x) & z); }
+                function G(x, y, z) { return (x & z) | (y & (~z)); }
+                function H(x, y, z) { return (x ^ y ^ z); }
+                function I(x, y, z) { return (y ^ (x | (~z))); }
+                function FF(a, b, c, d, x, s, ac) {
+                    a = addUnsigned(a, addUnsigned(addUnsigned(F(b, c, d), x), ac));
+                    return addUnsigned(rotateLeft(a, s), b);
+                }
+                function GG(a, b, c, d, x, s, ac) {
+                    a = addUnsigned(a, addUnsigned(addUnsigned(G(b, c, d), x), ac));
+                    return addUnsigned(rotateLeft(a, s), b);
+                }
+                function HH(a, b, c, d, x, s, ac) {
+                    a = addUnsigned(a, addUnsigned(addUnsigned(H(b, c, d), x), ac));
+                    return addUnsigned(rotateLeft(a, s), b);
+                }
+                function II(a, b, c, d, x, s, ac) {
+                    a = addUnsigned(a, addUnsigned(addUnsigned(I(b, c, d), x), ac));
+                    return addUnsigned(rotateLeft(a, s), b);
+                }
+                function convertToWordArray(string) {
+                    let wordArray = [];
+                    let wordCount = ((string.length + 8) >> 6) + 1;
+                    for (let i = 0; i < wordCount * 16; i++) wordArray[i] = 0;
+                    for (let i = 0; i < string.length; i++) wordArray[i >> 2] |= string.charCodeAt(i) << (i % 4 * 8);
+                    wordArray[string.length >> 2] |= 0x80 << (string.length % 4 * 8);
+                    wordArray[wordCount * 16 - 2] = string.length * 8;
+                    return wordArray;
+                }
+                let x = convertToWordArray(string);
+                let a = 0x67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
+                for (let k = 0; k < x.length; k += 16) {
+                    let AA = a, BB = b, CC = c, DD = d;
+                    a = FF(a, b, c, d, x[k+0], 7, 0xD76AA478);
+                    d = FF(d, a, b, c, x[k+1], 12, 0xE8C7B756);
+                    c = FF(c, d, a, b, x[k+2], 17, 0x242070DB);
+                    b = FF(b, c, d, a, x[k+3], 22, 0xC1BDCEEE);
+                    a = FF(a, b, c, d, x[k+4], 7, 0xF57C0FAF);
+                    d = FF(d, a, b, c, x[k+5], 12, 0x4787C62A);
+                    c = FF(c, d, a, b, x[k+6], 17, 0xA8304613);
+                    b = FF(b, c, d, a, x[k+7], 22, 0xFD469501);
+                    a = FF(a, b, c, d, x[k+8], 7, 0x698098D8);
+                    d = FF(d, a, b, c, x[k+9], 12, 0x8B44F7AF);
+                    c = FF(c, d, a, b, x[k+10], 17, 0xFFFF5BB1);
+                    b = FF(b, c, d, a, x[k+11], 22, 0x895CD7BE);
+                    a = FF(a, b, c, d, x[k+12], 7, 0x6B901122);
+                    d = FF(d, a, b, c, x[k+13], 12, 0xFD987193);
+                    c = FF(c, d, a, b, x[k+14], 17, 0xA679438E);
+                    b = FF(b, c, d, a, x[k+15], 22, 0x49B40821);
+                    a = GG(a, b, c, d, x[k+1], 5, 0xF61E2562);
+                    d = GG(d, a, b, c, x[k+6], 9, 0xC040B340);
+                    c = GG(c, d, a, b, x[k+11], 14, 0x265E5A51);
+                    b = GG(b, c, d, a, x[k+0], 20, 0xE9B6C7AA);
+                    a = GG(a, b, c, d, x[k+5], 5, 0xD62F105D);
+                    d = GG(d, a, b, c, x[k+10], 9, 0x02441453);
+                    c = GG(c, d, a, b, x[k+15], 14, 0xD8A1E681);
+                    b = GG(b, c, d, a, x[k+4], 20, 0xE7D3FBC8);
+                    a = GG(a, b, c, d, x[k+9], 5, 0x21E1CDE6);
+                    d = GG(d, a, b, c, x[k+14], 9, 0xC33707D6);
+                    c = GG(c, d, a, b, x[k+3], 14, 0xF4D50D87);
+                    b = GG(b, c, d, a, x[k+8], 20, 0x455A14ED);
+                    a = GG(a, b, c, d, x[k+13], 5, 0xA9E3E905);
+                    d = GG(d, a, b, c, x[k+2], 9, 0xFCEFA3F8);
+                    c = GG(c, d, a, b, x[k+7], 14, 0x676F02D9);
+                    b = GG(b, c, d, a, x[k+12], 20, 0x8D2A4C8A);
+                    a = HH(a, b, c, d, x[k+5], 4, 0xFFFA3942);
+                    d = HH(d, a, b, c, x[k+8], 11, 0x8771F681);
+                    c = HH(c, d, a, b, x[k+11], 16, 0x6D9D6122);
+                    b = HH(b, c, d, a, x[k+14], 23, 0xFDE5380C);
+                    a = HH(a, b, c, d, x[k+1], 4, 0xA4BEEA44);
+                    d = HH(d, a, b, c, x[k+4], 11, 0x4BDECFA9);
+                    c = HH(c, d, a, b, x[k+7], 16, 0xF6BB4B60);
+                    b = HH(b, c, d, a, x[k+10], 23, 0xBEBFBC70);
+                    a = HH(a, b, c, d, x[k+13], 4, 0x289B7EC6);
+                    d = HH(d, a, b, c, x[k+0], 11, 0xEAA127FA);
+                    c = HH(c, d, a, b, x[k+3], 16, 0xD4EF3085);
+                    b = HH(b, c, d, a, x[k+6], 23, 0x04881D05);
+                    a = HH(a, b, c, d, x[k+9], 4, 0xD9D4D039);
+                    d = HH(d, a, b, c, x[k+12], 11, 0xE6DB99E5);
+                    c = HH(c, d, a, b, x[k+15], 16, 0x1FA27CF8);
+                    b = HH(b, c, d, a, x[k+2], 23, 0xC4AC5665);
+                    a = II(a, b, c, d, x[k+0], 6, 0xF4292244);
+                    d = II(d, a, b, c, x[k+7], 10, 0x432AFF97);
+                    c = II(c, d, a, b, x[k+14], 15, 0xAB9423A7);
+                    b = II(b, c, d, a, x[k+5], 21, 0xFC93A039);
+                    a = II(a, b, c, d, x[k+12], 6, 0x655B59C3);
+                    d = II(d, a, b, c, x[k+3], 10, 0x8F0CCC92);
+                    c = II(c, d, a, b, x[k+10], 15, 0xFFEFF47D);
+                    b = II(b, c, d, a, x[k+1], 21, 0x85845DD1);
+                    a = II(a, b, c, d, x[k+8], 6, 0x6FA87E4F);
+                    d = II(d, a, b, c, x[k+15], 10, 0xFE2CE6E0);
+                    c = II(c, d, a, b, x[k+6], 15, 0xA3014314);
+                    b = II(b, c, d, a, x[k+13], 21, 0x4E0811A1);
+                    a = II(a, b, c, d, x[k+4], 6, 0xF7537E82);
+                    d = II(d, a, b, c, x[k+11], 10, 0xBD3AF235);
+                    c = II(c, d, a, b, x[k+2], 15, 0x2AD7D2BB);
+                    b = II(b, c, d, a, x[k+9], 21, 0xEB86D391);
+                    a = addUnsigned(a, AA);
+                    b = addUnsigned(b, BB);
+                    c = addUnsigned(c, CC);
+                    d = addUnsigned(d, DD);
+                }
+                let result = '';
+                const wordToHex = [0,1,2,3,4,5,6,7,8,9,'a','b','c','d','e','f'];
+                for (let i = 0; i < 4; i++) {
+                    result += wordToHex[(a >> (i * 8 + 4)) & 0x0F] + wordToHex[(a >> (i * 8)) & 0x0F];
+                }
+                for (let i = 0; i < 4; i++) {
+                    result += wordToHex[(b >> (i * 8 + 4)) & 0x0F] + wordToHex[(b >> (i * 8)) & 0x0F];
+                }
+                for (let i = 0; i < 4; i++) {
+                    result += wordToHex[(c >> (i * 8 + 4)) & 0x0F] + wordToHex[(c >> (i * 8)) & 0x0F];
+                }
+                for (let i = 0; i < 4; i++) {
+                    result += wordToHex[(d >> (i * 8 + 4)) & 0x0F] + wordToHex[(d >> (i * 8)) & 0x0F];
+                }
+                return result;
+            }
+            
+            // Game Jolt API Functions
+            async function gameJoltRequest(endpoint, params = {}) {
+                let url = `${API_BASE}${endpoint}?game_id=${GAME_ID}&format=json`;
+                for (let [k, v] of Object.entries(params)) {
+                    url += `&${encodeURIComponent(k)}=${encodeURIComponent(v)}`;
+                }
+                const signature = md5(url + PRIVATE_KEY);
+                url += `&signature=${signature}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                return data.response;
+            }
+            
+            async function dataStoreSet(key, value) {
+                const result = await gameJoltRequest('/data-store/set/', { key, data: JSON.stringify(value) });
+                return result.success === 'true';
+            }
+            
+            async function dataStoreGet(key) {
+                const result = await gameJoltRequest('/data-store/', { key });
+                if (result.success === 'true' && result.data) {
+                    try {
+                        return JSON.parse(result.data);
+                    } catch(e) {
+                        return null;
+                    }
+                }
+                return null;
+            }
+            
+            async function dataStoreGetKeys(pattern = '*') {
+                const result = await gameJoltRequest('/data-store/get-keys/', { pattern });
+                if (result.success === 'true' && result.keys) {
+                    return result.keys;
+                }
+                return [];
+            }
+            
+            // YeetYourFiles Upload
+            async function uploadToYYF(file, fileName) {
+                const formData = new FormData();
+                formData.append('file', file, fileName);
+                
+                const response = await fetch(`${YYF_URL}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+                
+                const result = await response.json();
+                return {
+                    fileUrl: YYF_URL + result.fileUrl,
+                    fileId: result.fileId,
+                    shortHash: result.shortHash
+                };
+            }
+            
+            // Data Structures
+            const STORAGE_KEY = 'teletok_videos';
+            let videos = [];
+            let currentUser = {
+                id: 'user_' + (Math.random() * 1000000).toFixed(0),
+                username: 'user_' + Math.floor(Math.random() * 10000),
+                avatar: 'https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 70),
+                verified: Math.random() > 0.7,
+                followers: Math.floor(Math.random() * 100000),
+                following: Math.floor(Math.random() * 500),
+                bio: '🔥 Content creator'
+            };
+            
+            // Load videos from Game Jolt
+            async function loadVideosFromStorage() {
+                try {
+                    const stored = await dataStoreGet(STORAGE_KEY);
+                    if (stored && Array.isArray(stored)) {
+                        videos = stored;
+                    } else {
+                        videos = [];
+                    }
+                    return videos;
+                } catch(e) {
+                    console.error('Failed to load videos:', e);
+                    videos = [];
+                    return videos;
+                }
+            }
+            
+            // Save videos to Game Jolt
+            async function saveVideosToStorage() {
+                try {
+                    await dataStoreSet(STORAGE_KEY, videos);
+                    return true;
+                } catch(e) {
+                    console.error('Failed to save videos:', e);
+                    return false;
+                }
+            }
+            
+            // Add new video
+            async function addVideo(videoData) {
+                const newVideo = {
+                    id: Date.now().toString(),
+                    userId: currentUser.id,
+                    userName: currentUser.username,
+                    userAvatar: currentUser.avatar,
+                    userVerified: currentUser.verified,
+                    videoUrl: videoData.videoUrl,
+                    caption: videoData.caption,
+                    music: videoData.music,
+                    likes: 0,
+                    comments: 0,
+                    saves: 0,
+                    createdAt: new Date().toISOString(),
+                    commentsList: []
+                };
+                videos.unshift(newVideo);
+                await saveVideosToStorage();
+                return newVideo;
+            }
+            
+            // Update video interactions
+            async function updateVideoInteractions(videoId, updates) {
+                const videoIndex = videos.findIndex(v => v.id === videoId);
+                if (videoIndex !== -1) {
+                    videos[videoIndex] = { ...videos[videoIndex], ...updates };
+                    await saveVideosToStorage();
+                }
+            }
+            
+            // Format numbers
+            function formatCount(num) {
+                if (num >= 1000000) return (num/1000000).toFixed(1)+'M';
+                if (num >= 1000) return (num/1000).toFixed(1)+'K';
+                return num.toString();
+            }
+            
+            // Like/Unlike tracking
+            let likedVideos = new Map();
+            let savedVideos = new Map();
+            
+            // Like video
+            async function likeVideo(videoId, likeIcon, likeCountSpan, heartOverlay = null) {
+                const video = videos.find(v => v.id === videoId);
+                if (!video) return;
+                
+                const liked = !likedVideos.get(videoId);
+                likedVideos.set(videoId, liked);
+                
+                if (liked) {
+                    video.likes += 1;
+                } else {
+                    video.likes -= 1;
+                }
+                
+                await updateVideoInteractions(videoId, { likes: video.likes });
+                
+                likeIcon.classList.toggle('fa-regular');
+                likeIcon.classList.toggle('fa-solid');
+                likeIcon.classList.toggle('liked', liked);
+                likeCountSpan.innerText = formatCount(video.likes);
+                
+                if (heartOverlay) {
+                    heartOverlay.classList.remove('show');
+                    void heartOverlay.offsetWidth;
+                    heartOverlay.classList.add('show');
+                }
+                
+                if (window.Telegram && window.Telegram.WebApp.HapticFeedback) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                }
+            }
+            
+            // Comments modal
+            let currentVideoId = null;
+            const modal = document.getElementById('commentModal');
+            
+            async function openCommentsForVideo(videoId) {
+                currentVideoId = videoId;
+                const video = videos.find(v => v.id === videoId);
+                if (!video) return;
+                
+                const commentListDiv = document.getElementById('commentList');
+                const comments = video.commentsList || [];
+                commentListDiv.innerHTML = comments.map(c => `
+                    <div class="comment-item">
+                        <div class="comment-avatar"></div>
+                        <div class="comment-content">
+                            <div class="comment-name">${escapeHtml(c.user)}</div>
+                            <div class="comment-text">${escapeHtml(c.text)}</div>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('commentCountSpan').innerText = comments.length;
+                modal.classList.add('show');
+            }
+            
+            async function addComment() {
+                if (!currentVideoId) return;
+                const input = document.getElementById('commentInput');
+                if (!input.value.trim()) return;
+                
+                const video = videos.find(v => v.id === currentVideoId);
+                if (video) {
+                    if (!video.commentsList) video.commentsList = [];
+                    video.commentsList.push({ 
+                        user: currentUser.username, 
+                        text: input.value.trim(),
+                        timestamp: new Date().toISOString()
+                    });
+                    video.comments = video.commentsList.length;
+                    await updateVideoInteractions(currentVideoId, { 
+                        comments: video.comments,
+                        commentsList: video.commentsList 
+                    });
+                    input.value = '';
+                    openCommentsForVideo(currentVideoId);
+                    
+                    if (window.Telegram && window.Telegram.WebApp.HapticFeedback) {
+                        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                    }
+                }
+            }
+            
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
+            
+            // Create video card
+            function createVideoCard(video) {
+                const isLiked = likedVideos.get(video.id) || false;
+                const isSaved = savedVideos.get(video.id) || false;
+                
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.dataset.videoId = video.id;
+                card.innerHTML = `
+                    <video class="bg-video" src="${video.videoUrl}" loop playsinline></video>
+                    <div class="heart-overlay"><i class="fa-solid fa-heart"></i></div>
+                    <div class="video-info">
+                        <div class="user-row" data-userid="${video.userId}">
+                            <img class="avatar" src="${video.userAvatar}">
+                            <span class="username">${escapeHtml(video.userName)}</span>
+                            ${video.userVerified ? '<i class="fa-solid fa-circle-check verified"></i>' : ''}
+                            <span class="live-badge">LIVE</span>
+                        </div>
+                        <div class="caption">${escapeHtml(video.caption)}</div>
+                        <div class="music-row">
+                            <div class="music-icon"><i class="fa-solid fa-music"></i></div>
+                            <span>${escapeHtml(video.music)}</span>
+                        </div>
+                    </div>
+                    <div class="action-bar">
+                        <div class="action-item like-item">
+                            <i class="${isLiked ? 'fa-solid fa-heart liked' : 'fa-regular fa-heart'}" data-action="like"></i>
+                            <span class="count like-count">${formatCount(video.likes)}</span>
+                        </div>
+                        <div class="action-item comment-item">
+                            <i class="fa-regular fa-comment" data-action="comment"></i>
+                            <span class="count comment-count">${formatCount(video.comments)}</span>
+                        </div>
+                        <div class="action-item save-item">
+                            <i class="${isSaved ? 'fa-solid fa-bookmark saved' : 'fa-regular fa-bookmark'}" data-action="save"></i>
+                            <span class="count save-count">${formatCount(video.saves)}</span>
+                        </div>
+                        <div class="action-item share-item">
+                            <i class="fa-solid fa-share" data-action="share"></i>
+                            <span class="count">1.2K</span>
+                        </div>
+                    </div>
+                `;
+                
+                const videoEl = card.querySelector('.bg-video');
+                videoEl.volume = 1.0;
+                videoEl.muted = false;
+                
+                videoEl.addEventListener('click', (e) => e.stopPropagation());
+                videoEl.addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    likeVideo(video.id, card.querySelector('[data-action="like"]'), card.querySelector('.like-count'), card.querySelector('.heart-overlay'));
+                });
+                
+                card.querySelector('[data-action="like"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    likeVideo(video.id, card.querySelector('[data-action="like"]'), card.querySelector('.like-count'), null);
+                });
+                
+                card.querySelector('[data-action="comment"]').addEventListener('click', () => openCommentsForVideo(video.id));
+                
+                card.querySelector('[data-action="save"]').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const newSaved = !savedVideos.get(video.id);
+                    savedVideos.set(video.id, newSaved);
+                    const icon = card.querySelector('[data-action="save"]');
+                    icon.classList.toggle('fa-regular');
+                    icon.classList.toggle('fa-solid');
+                    icon.classList.toggle('saved', newSaved);
+                    if (newSaved) {
+                        video.saves += 1;
+                        await updateVideoInteractions(video.id, { saves: video.saves });
+                        card.querySelector('.save-count').innerText = formatCount(video.saves);
+                    }
+                });
+                
+                card.querySelector('[data-action="share"]').addEventListener('click', () => {
+                    if (window.Telegram && window.Telegram.WebApp.showAlert) {
+                        window.Telegram.WebApp.showAlert(`Поделиться видео: ${video.caption}`);
+                    } else {
+                        alert(`Поделиться видео: ${video.caption}`);
+                    }
+                });
+                
+                card.querySelector('.user-row').addEventListener('click', () => {
+                    renderProfile(video.userId);
+                    showPage('profile');
+                });
+                
+                return card;
+            }
+            
+            // Render feed
+            const feed = document.getElementById('feedContainer');
+            async function renderFeed() {
+                feed.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><span>Загрузка видео...</span></div>';
+                await loadVideosFromStorage();
+                
+                feed.innerHTML = '';
+                if (videos.length === 0) {
+                    feed.innerHTML = '<div class="loading-spinner"><span>Нет видео. Будьте первым!</span></div>';
+                    return;
+                }
+                
+                videos.forEach(v => feed.appendChild(createVideoCard(v)));
+                setupVideoAutoplay();
+            }
+            
+            function setupVideoAutoplay() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        const video = entry.target.querySelector('.bg-video');
+                        if (video) {
+                            if (entry.isIntersecting) {
+                                video.play().catch(e => {});
+                                video.volume = 1.0;
+                                video.muted = false;
+                            } else {
+                                video.pause();
+                            }
+                        }
+                    });
+                }, { root: feed, threshold: 0.6 });
+                
+                document.querySelectorAll('.video-card').forEach(c => observer.observe(c));
+            }
+            
+            // Profile rendering
+            async function renderProfile(userId) {
+                const userVideos = videos.filter(v => v.userId === userId);
+                const user = userVideos[0] ? {
+                    id: userId,
+                    username: userVideos[0].userName,
+                    avatar: userVideos[0].userAvatar,
+                    verified: userVideos[0].userVerified
+                } : currentUser;
+                
+                const html = `
+                    <div class="profile-header">
+                        <div class="profile-top">
+                            <img class="profile-avatar" src="${user.avatar}">
+                            <div class="profile-stats">
+                                <div class="stat"><span class="stat-number">${userVideos.length}</span><span class="stat-label">видео</span></div>
+                                <div class="stat"><span class="stat-number">${formatCount(currentUser.followers)}</span><span class="stat-label">подписчики</span></div>
+                                <div class="stat"><span class="stat-number">${formatCount(currentUser.following)}</span><span class="stat-label">подписки</span></div>
+                            </div>
+                        </div>
+                        <div class="profile-bio"><strong>${escapeHtml(user.username)}</strong> · ${currentUser.bio}</div>
+                    </div>
+                    <div class="video-grid" id="profileVideoGrid"></div>
+                `;
+                
+                document.getElementById('profileContent').innerHTML = html;
+                const grid = document.getElementById('profileVideoGrid');
+                userVideos.forEach(v => {
+                    const vid = document.createElement('video');
+                    vid.src = v.videoUrl;
+                    vid.className = 'grid-video';
+                    vid.muted = true;
+                    vid.loop = true;
+                    vid.addEventListener('click', () => {
+                        showPage('feed');
+                        setTimeout(() => {
+                            const index = videos.findIndex(video => video.id === v.id);
+                            if (index !== -1) {
+                                document.querySelectorAll('.video-card')[index]?.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }, 100);
+                    });
+                    grid.appendChild(vid);
+                });
+            }
+            
+            // Upload video
+            async function uploadAndPublish() {
+                const fileInput = document.getElementById('videoFile');
+                const caption = document.getElementById('videoCaption').value;
+                const music = document.getElementById('videoMusic').value;
+                const progressDiv = document.getElementById('uploadProgress');
+                const publishBtn = document.getElementById('publishBtn');
+                
+                if (!fileInput.files || !fileInput.files[0]) {
+                    if (window.Telegram && window.Telegram.WebApp.showAlert) {
+                        window.Telegram.WebApp.showAlert('Выберите видео');
+                    } else {
+                        alert('Выберите видео');
+                    }
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                if (!file.type.startsWith('video/')) {
+                    if (window.Telegram && window.Telegram.WebApp.showAlert) {
+                        window.Telegram.WebApp.showAlert('Пожалуйста, выберите видео файл');
+                    } else {
+                        alert('Пожалуйста, выберите видео файл');
+                    }
+                    return;
+                }
+                
+                try {
+                    progressDiv.classList.add('active');
+                    publishBtn.disabled = true;
+                    publishBtn.style.opacity = '0.5';
+                    
+                    const uploadResult = await uploadToYYF(file, file.name);
+                    
+                    await addVideo({
+                        videoUrl: uploadResult.fileUrl,
+                        caption: caption || 'Новое видео',
+                        music: music || 'оригинальный звук'
+                    });
+                    
+                    progressDiv.classList.remove('active');
+                    publishBtn.disabled = false;
+                    publishBtn.style.opacity = '1';
+                    
+                    fileInput.value = '';
+                    document.getElementById('videoCaption').value = '';
+                    document.getElementById('videoMusic').value = '';
+                    
+                    if (window.Telegram && window.Telegram.WebApp.HapticFeedback) {
+                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    }
+                    
+                    showPage('feed');
+                    await renderFeed();
+                    
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    progressDiv.classList.remove('active');
+                    publishBtn.disabled = false;
+                    publishBtn.style.opacity = '1';
+                    if (window.Telegram && window.Telegram.WebApp.showAlert) {
+                        window.Telegram.WebApp.showAlert('Ошибка загрузки видео');
+                    } else {
+                        alert('Ошибка загрузки видео');
+                    }
+                }
+            }
+            
+            // Navigation
+            const pages = document.querySelectorAll('.page');
+            function showPage(pageId) {
+                pages.forEach(p => p.classList.remove('active'));
+                document.getElementById(`page-${pageId}`).classList.add('active');
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(n => n.dataset.page === pageId);
+                if (activeNav) activeNav.classList.add('active');
+                if (pageId === 'profile') renderProfile(currentUser.id);
+                if (pageId === 'feed') renderFeed();
+            }
+            
+            // Initialize Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.expand();
+                tg.disableVerticalSwipes();
+                tg.ready();
+                
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    const tgUser = tg.initDataUnsafe.user;
+                    currentUser.username = tgUser.first_name || tgUser.username || currentUser.username;
+                    if (tgUser.photo_url) currentUser.avatar = tgUser.photo_url;
+                }
+            }
+            
+            // Event listeners
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const page = item.dataset.page;
+                    if (page) showPage(page);
+                });
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    showPage(this.dataset.tab === 'home' ? 'feed' : 'discover');
+                });
+            });
+            
+            document.getElementById('uploadArea').onclick = () => document.getElementById('videoFile').click();
+            document.getElementById('publishBtn').onclick = uploadAndPublish;
+            document.getElementById('closeComments').onclick = () => modal.classList.remove('show');
+            document.getElementById('sendComment').onclick = addComment;
+            document.getElementById('commentInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addComment();
+            });
+            
+            // Initial load
+            renderFeed();
+        })();
+    </script>
+</body>
+</html>
